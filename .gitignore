@@ -1,0 +1,6 @@
+/docs
+.env
+/cairo-contracts/WEEK1_PROTOTYPE.md
+/cairo-contracts/target
+/cairo-contracts/dojo_mainnet.toml
+/cairo-contracts/.env
