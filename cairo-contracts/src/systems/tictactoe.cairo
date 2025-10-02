@@ -1,19 +1,22 @@
-use dojo_starter::models::{TicTacToeGame, GameMove, AgeVerification};
+use dojo_starter::models::TicTacToeGame;
 
 #[starknet::interface]
 pub trait ITicTacToe<T> {
-    fn create_game(ref self: T, game_id: felt252, min_age_requirement: u8) -> felt252;
+    fn create_game(ref self: T, game_id: felt252, min_age_requirement: u8, user_id: felt252) -> felt252;
     fn join_game(ref self: T, game_id: felt252, user_id: felt252) -> bool;
     fn make_move(ref self: T, game_id: felt252, position: u8, user_id: felt252) -> bool;
     fn get_game(self: @T, game_id: felt252) -> TicTacToeGame;
+    fn set_verifier(ref self: T, verifier_address: starknet::ContractAddress);
 }
 
 #[dojo::contract]
 pub mod tictactoe {
     use dojo::event::EventStorage;
     use dojo::model::ModelStorage;
-    use dojo_starter::models::{TicTacToeGame, GameMove, AgeVerification};
-    use starknet::get_caller_address;
+    use dojo_starter::models::{TicTacToeGame, GameMove};
+    use dojo_starter::systems::stark_age_verifier::{IStarkAgeVerifierDispatcher, IStarkAgeVerifierDispatcherTrait};
+    use starknet::{get_caller_address, ContractAddress, contract_address_const};
+    use starknet::storage::{StoragePointerReadAccess, StoragePointerWriteAccess};
     use super::{ITicTacToe};
 
     #[derive(Copy, Drop, Serde)]
@@ -43,18 +46,36 @@ pub mod tictactoe {
         pub position: u8,
     }
 
+    // Component for storing verifier address
+    #[storage]
+    struct Storage {
+        verifier_address: ContractAddress,
+    }
+
     #[abi(embed_v0)]
     impl TicTacToeImpl of ITicTacToe<ContractState> {
+        fn set_verifier(ref self: ContractState, verifier_address: ContractAddress) {
+            self.verifier_address.write(verifier_address);
+        }
         fn create_game(
             ref self: ContractState,
             game_id: felt252,
-            min_age_requirement: u8
+            min_age_requirement: u8,
+            user_id: felt252
         ) -> felt252 {
             let mut world = self.world_default();
             let caller = get_caller_address();
 
+            // Verify age requirement using STARK verifier for creator
+            let zero_address = contract_address_const::<0>();
+            let verifier_addr = self.verifier_address.read();
+            if verifier_addr != zero_address {
+                let verifier = IStarkAgeVerifierDispatcher { contract_address: verifier_addr };
+                let has_proof = verifier.has_valid_proof(user_id, min_age_requirement);
+                if !has_proof { return 0; }
+            }
+
             // Create game with empty board
-            let zero_address = starknet::contract_address_const::<0>();
             let game = TicTacToeGame {
                 game_id,
                 player_x: caller,
@@ -88,15 +109,19 @@ pub mod tictactoe {
             let mut game: TicTacToeGame = world.read_model(game_id);
 
             // Check if game is already full or finished
-            let zero_address = starknet::contract_address_const::<0>();
+            let zero_address = contract_address_const::<0>();
             if game.player_o != zero_address || game.is_finished {
                 return false;
             }
 
-            // Verify age requirement
-            let verification: AgeVerification = world.read_model(user_id);
-            if !verification.verified || verification.minimum_age < game.min_age_requirement {
-                return false;
+            // Verify age requirement using STARK verifier
+            let verifier_addr = self.verifier_address.read();
+            if verifier_addr != zero_address {
+                let verifier = IStarkAgeVerifierDispatcher { contract_address: verifier_addr };
+                let has_proof = verifier.has_valid_proof(user_id, game.min_age_requirement);
+                if !has_proof {
+                    return false;
+                }
             }
 
             // Join as player O
@@ -166,10 +191,15 @@ pub mod tictactoe {
                 return false;
             }
 
-            // Verify identity and age requirement
-            let verification: AgeVerification = world.read_model(user_id);
-            if !verification.verified || verification.minimum_age < game.min_age_requirement {
-                return false;
+            // Verify identity and age requirement using STARK verifier
+            let verifier_addr = self.verifier_address.read();
+            let zero_address = contract_address_const::<0>();
+            if verifier_addr != zero_address {
+                let verifier = IStarkAgeVerifierDispatcher { contract_address: verifier_addr };
+                let has_proof = verifier.has_valid_proof(user_id, game.min_age_requirement);
+                if !has_proof {
+                    return false;
+                }
             }
 
             // Make the move
@@ -196,8 +226,33 @@ pub mod tictactoe {
                 return false;
             }
 
-            // Switch players
-            game.current_player = if caller == game.player_x { game.player_o } else { game.player_x };
+            // Check win conditions for the current player
+            let row1 = game.board1 == player_symbol && game.board2 == player_symbol && game.board3 == player_symbol;
+            let row2 = game.board4 == player_symbol && game.board5 == player_symbol && game.board6 == player_symbol;
+            let row3 = game.board7 == player_symbol && game.board8 == player_symbol && game.board9 == player_symbol;
+            let col1 = game.board1 == player_symbol && game.board4 == player_symbol && game.board7 == player_symbol;
+            let col2 = game.board2 == player_symbol && game.board5 == player_symbol && game.board8 == player_symbol;
+            let col3 = game.board3 == player_symbol && game.board6 == player_symbol && game.board9 == player_symbol;
+            let diag1 = game.board1 == player_symbol && game.board5 == player_symbol && game.board9 == player_symbol;
+            let diag2 = game.board3 == player_symbol && game.board5 == player_symbol && game.board7 == player_symbol;
+
+            let has_won = row1 || row2 || row3 || col1 || col2 || col3 || diag1 || diag2;
+
+            // Check if the board is full (draw)
+            let is_full = game.board1 != 0 && game.board2 != 0 && game.board3 != 0 &&
+                game.board4 != 0 && game.board5 != 0 && game.board6 != 0 &&
+                game.board7 != 0 && game.board8 != 0 && game.board9 != 0;
+
+            if has_won {
+                game.is_finished = true;
+                game.winner = caller;
+            } else if is_full {
+                game.is_finished = true;
+                game.is_draw = true;
+            } else {
+                // Switch players if game not finished
+                game.current_player = if caller == game.player_x { game.player_o } else { game.player_x };
+            }
 
             // Record the move
             let game_move = GameMove {

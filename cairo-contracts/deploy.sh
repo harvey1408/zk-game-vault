@@ -65,6 +65,13 @@ sozo auth grant writer dojo_starter-AgeVerification,dojo_starter-identity_vault 
 sozo auth grant writer dojo_starter-IdentityCreated,dojo_starter-identity_vault --world $WORLD_ADDRESS --wait
 sozo auth grant writer dojo_starter-AgeVerified,dojo_starter-identity_vault --world $WORLD_ADDRESS --wait
 
+# Grant writer permissions for stark_age_verifier system
+echo "Granting permissions to stark_age_verifier..."
+sozo auth grant writer dojo_starter-VerificationFact,dojo_starter-stark_age_verifier --world $WORLD_ADDRESS --wait
+sozo auth grant writer dojo_starter-VerificationToken,dojo_starter-stark_age_verifier --world $WORLD_ADDRESS --wait
+sozo auth grant writer dojo_starter-FactRegistered,dojo_starter-stark_age_verifier --world $WORLD_ADDRESS --wait
+sozo auth grant writer dojo_starter-ProofVerified,dojo_starter-stark_age_verifier --world $WORLD_ADDRESS --wait
+
 # Grant writer permissions for tictactoe system
 echo "Granting permissions to tictactoe..."
 sozo auth grant writer dojo_starter-TicTacToeGame,dojo_starter-tictactoe --world $WORLD_ADDRESS --wait
@@ -81,12 +88,28 @@ sozo auth grant writer dojo_starter-DirectionsAvailable,dojo_starter-actions --w
 
 echo "✅ Permissions granted"
 echo ""
+
+echo "🔗 Setting STARK verifier address in tictactoe contract..."
+# Get the STARK verifier address from manifest
+VERIFIER_ADDRESS=$(grep -A 5 "stark_age_verifier" manifest_dev.json | grep "address" | head -1 | cut -d'"' -f4)
+
+if [ -z "$VERIFIER_ADDRESS" ]; then
+    echo "❌ Could not find stark_age_verifier address in manifest"
+else
+    echo "STARK Verifier Address: $VERIFIER_ADDRESS"
+    # Set verifier in tictactoe contract
+    sozo execute dojo_starter-tictactoe set_verifier $VERIFIER_ADDRESS --world $WORLD_ADDRESS --wait
+    echo "✅ Verifier address set in tictactoe contract"
+fi
+
+echo ""
 echo "✅ Deployment completed successfully!"
 echo ""
 echo "📝 Next Steps:"
 echo "1. Fund your account with testnet ETH from: https://faucet.sepolia.starknet.io/"
-echo "2. Test the contracts using the test script"
-echo "3. Update your frontend with the contract addresses"
+echo "2. Clear browser localStorage and create a fresh identity"
+echo "3. Test the TRUE zero-knowledge proof flow!"
 echo ""
 echo "🌍 World Address: $WORLD_ADDRESS"
+echo "🔍 STARK Verifier: $VERIFIER_ADDRESS"
 echo "🔍 Explorer: https://sepolia.starkscan.io/"

@@ -19,16 +19,24 @@ function findByTag(tag: string): DeployedContract | null {
 }
 
 const identityEntry = findByTag('dojo_starter-identity_vault');
+const starkVerifierEntry = findByTag('dojo_starter-stark_age_verifier');
 const tictactoeEntry = findByTag('dojo_starter-tictactoe');
 
 export const IDENTITY_CONTRACT_ADDRESS = identityEntry?.address ?? '';
 export const IDENTITY_CONTRACT_ABI: any = identityEntry?.abi ?? [];
+export const STARK_VERIFIER_CONTRACT_ADDRESS = starkVerifierEntry?.address ?? '';
+export const STARK_VERIFIER_CONTRACT_ABI: any = starkVerifierEntry?.abi ?? [];
 export const TICTACTOE_CONTRACT_ADDRESS = tictactoeEntry?.address ?? '';
 export const TICTACTOE_CONTRACT_ABI: any = tictactoeEntry?.abi ?? [];
 
 export function getIdentityContract(client: Account | ProviderInterface) {
   if (!IDENTITY_CONTRACT_ADDRESS || !Array.isArray(IDENTITY_CONTRACT_ABI)) return null;
   return new Contract(IDENTITY_CONTRACT_ABI, IDENTITY_CONTRACT_ADDRESS, client);
+}
+
+export function getStarkVerifierContract(client: Account | ProviderInterface) {
+  if (!STARK_VERIFIER_CONTRACT_ADDRESS || !Array.isArray(STARK_VERIFIER_CONTRACT_ABI)) return null;
+  return new Contract(STARK_VERIFIER_CONTRACT_ABI, STARK_VERIFIER_CONTRACT_ADDRESS, client);
 }
 
 export function getTicTacToeContract(client: Account | ProviderInterface) {

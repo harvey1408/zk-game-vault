@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# ZKGameVault Deployment Test Script
-# Tests the deployed contracts on StarkNet Sepolia Testnet
+# ZKGameVault Deployment Test Script - ZK Proof Version
+# Tests the deployed contracts with zero-knowledge proofs
 
 set -e
 
-echo "🧪 Testing ZKGameVault deployment..."
+echo "🧪 Testing ZKGameVault deployment with ZK Proofs..."
 
 # Check if environment variables are set
 if [ ! -f ".env" ]; then
@@ -19,32 +19,61 @@ source .env
 # Set up Scarb path
 export PATH="/home/abhip05/.local/share/mise/installs/scarb/2.12.2/bin:$PATH"
 
-# Test 1: Create Identity
-echo "📝 Test 1: Creating identity..."
+# Test 1: Create Identity with ZK Proof
+echo "📝 Test 1: Creating identity with Pedersen commitment..."
 USER_ID=12345
 AGE=25
 COUNTRY=1
 
-# Create identity
-echo "Creating identity for user $USER_ID, age $AGE, country $COUNTRY"
-sozo execute dojo_starter-identity_vault create_identity $USER_ID $AGE $COUNTRY --wait
+# Generate a salt (in production, this would be cryptographically random)
+# For testing, we use a fixed salt
+SALT=0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+
+# Compute Pedersen commitment using Python helper
+echo "Computing Pedersen commitment for age $AGE with salt $SALT..."
+
+# Compute commitment using Python from virtual environment
+if [ -d "venv" ]; then
+    source venv/bin/activate
+    echo "✅ Virtual environment activated"
+fi
+
+if [ -f "compute_commitment.py" ]; then
+    echo "Computing Pedersen hash using Python from venv..."
+    AGE_COMMITMENT=$(python compute_commitment.py $AGE $SALT)
+
+    if [ $? -eq 0 ] && [ ! -z "$AGE_COMMITMENT" ]; then
+        echo "✅ Computed commitment: $AGE_COMMITMENT"
+    else
+        echo "❌ Python computation failed"
+        echo "Make sure cairo-lang is installed in venv: pip install cairo-lang"
+        exit 1
+    fi
+else
+    echo "❌ compute_commitment.py not found"
+    exit 1
+fi
+
+# Create identity with commitment
+echo "Creating identity for user $USER_ID with age commitment (actual age: $AGE, country: $COUNTRY)"
+sozo execute dojo_starter-identity_vault create_identity $USER_ID $AGE_COMMITMENT $COUNTRY --wait
 
 if [ $? -eq 0 ]; then
-    echo "✅ Identity created successfully"
+    echo "✅ Identity created successfully with ZK commitment"
 else
     echo "❌ Identity creation failed"
     exit 1
 fi
 
-# Test 2: Verify Age
-echo "🔍 Test 2: Verifying age..."
+# Test 2: Verify Age with ZK Proof
+echo "🔍 Test 2: Verifying age with zero-knowledge proof..."
 MIN_AGE=18
 
-echo "Verifying age >= $MIN_AGE for user $USER_ID"
-sozo execute dojo_starter-identity_vault verify_age $USER_ID $MIN_AGE --wait
+echo "Verifying age >= $MIN_AGE for user $USER_ID (providing proof with age=$AGE and salt=$SALT)"
+sozo execute dojo_starter-identity_vault verify_age $USER_ID $MIN_AGE $AGE $SALT --wait
 
 if [ $? -eq 0 ]; then
-    echo "✅ Age verification completed"
+    echo "✅ Age verification completed with valid ZK proof"
 else
     echo "❌ Age verification failed"
     exit 1

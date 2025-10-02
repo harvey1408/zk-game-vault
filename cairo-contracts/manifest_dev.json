@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x57994b6a75fad550ca18b41ee82e2110e158c59028c4478109a67965a0e5b1e",
-    "address": "0x526a04441c187487d88f826b38d53dad242f4896575b9ab6298fc1f364bdae2",
-    "seed": "zkgamevault_identity_v1",
+    "address": "0x374e827796c6eead2f16bb4dac929f53db824b24a318107a82e8fd6497731aa",
+    "seed": "zkgamevault_identity_v7",
     "name": "Dojo starter",
     "entrypoints": [
       "uuid",
@@ -1479,7 +1479,7 @@
   },
   "contracts": [
     {
-      "address": "0x3b313a17ec959e899b9a7c8d15602aa7c24c55ecdea3c841601fdcc3286d9b3",
+      "address": "0x13d7096d9453abc78463b3854d26de456fd4673b7272cc9f752b8e4b4284400",
       "class_hash": "0x4a54ed5744ddf80a50b2a7ee9e5f0992eb75c40040897ba06011b0d4b2559af",
       "abi": [
         {
@@ -1709,8 +1709,8 @@
       ]
     },
     {
-      "address": "0x30a4304900ec364c5cb3e8bba748546bb20db59f9d3d96fe9338b4d5d1b25a8",
-      "class_hash": "0x7d5be4ed08a90f40f2219854e53b67cecd69346e8c89cbd252158687e5c7222",
+      "address": "0x60b8556f22e84d82f90285c005070903bab2702b7be91ed8f3e745d98a49272",
+      "class_hash": "0x65b09c5f37301bef1e0f5fae98a4aba517d9e53fd04deeb685d8ba0e7f68f1",
       "abi": [
         {
           "type": "impl",
@@ -1794,8 +1794,8 @@
               "type": "core::felt252"
             },
             {
-              "name": "age",
-              "type": "core::integer::u8"
+              "name": "age_commitment",
+              "type": "core::felt252"
             },
             {
               "name": "country",
@@ -1824,8 +1824,8 @@
                   "type": "core::felt252"
                 },
                 {
-                  "name": "age",
-                  "type": "core::integer::u8"
+                  "name": "age_commitment",
+                  "type": "core::felt252"
                 },
                 {
                   "name": "country",
@@ -1846,6 +1846,14 @@
                 {
                   "name": "minimum_age",
                   "type": "core::integer::u8"
+                },
+                {
+                  "name": "age",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "salt",
+                  "type": "core::felt252"
                 }
               ],
               "outputs": [
@@ -1998,8 +2006,299 @@
       ]
     },
     {
-      "address": "0x9f58d191e10705f766e33b77a30375642dfa8cbd02d659b41fb0f3b54b7040",
-      "class_hash": "0x65de818b67d2dc433aa5934f24cf8a3a08211d4e6fa95b3e17fd19b5abd8770",
+      "address": "0x315524193538375cb22b708756020a4168a47bf622f7813f4ce6d1dcaca1bd4",
+      "class_hash": "0x679cb3e35ca85dc2853401afac5c5d0551d8018f6fef0994c874a434a39a4c2",
+      "abi": [
+        {
+          "type": "impl",
+          "name": "stark_age_verifier__ContractImpl",
+          "interface_name": "dojo::contract::interface::IContract"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::interface::IContract",
+          "items": []
+        },
+        {
+          "type": "impl",
+          "name": "DojoDeployedContractImpl",
+          "interface_name": "dojo::meta::interface::IDeployedResource"
+        },
+        {
+          "type": "struct",
+          "name": "core::byte_array::ByteArray",
+          "members": [
+            {
+              "name": "data",
+              "type": "core::array::Array::<core::bytes_31::bytes31>"
+            },
+            {
+              "name": "pending_word",
+              "type": "core::felt252"
+            },
+            {
+              "name": "pending_word_len",
+              "type": "core::integer::u32"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::meta::interface::IDeployedResource",
+          "items": [
+            {
+              "type": "function",
+              "name": "dojo_name",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::byte_array::ByteArray"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "StarkAgeVerifierImpl",
+          "interface_name": "dojo_starter::systems::stark_age_verifier::IStarkAgeVerifier"
+        },
+        {
+          "type": "enum",
+          "name": "core::bool",
+          "variants": [
+            {
+              "name": "False",
+              "type": "()"
+            },
+            {
+              "name": "True",
+              "type": "()"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo_starter::systems::stark_age_verifier::IStarkAgeVerifier",
+          "items": [
+            {
+              "type": "function",
+              "name": "register_proof",
+              "inputs": [
+                {
+                  "name": "user_id",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "minimum_age",
+                  "type": "core::integer::u8"
+                },
+                {
+                  "name": "age_commitment",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "proof_hash",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "verification_output",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "has_valid_proof",
+              "inputs": [
+                {
+                  "name": "user_id",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "minimum_age",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "get_verification_token",
+              "inputs": [
+                {
+                  "name": "user_id",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "minimum_age",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "revoke_proof",
+              "inputs": [
+                {
+                  "name": "user_id",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "minimum_age",
+                  "type": "core::integer::u8"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "dojo_init",
+          "inputs": [],
+          "outputs": [],
+          "state_mutability": "view"
+        },
+        {
+          "type": "impl",
+          "name": "WorldProviderImpl",
+          "interface_name": "dojo::contract::components::world_provider::IWorldProvider"
+        },
+        {
+          "type": "struct",
+          "name": "dojo::world::iworld::IWorldDispatcher",
+          "members": [
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ]
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::world_provider::IWorldProvider",
+          "items": [
+            {
+              "type": "function",
+              "name": "world_dispatcher",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "dojo::world::iworld::IWorldDispatcher"
+                }
+              ],
+              "state_mutability": "view"
+            }
+          ]
+        },
+        {
+          "type": "impl",
+          "name": "UpgradeableImpl",
+          "interface_name": "dojo::contract::components::upgradeable::IUpgradeable"
+        },
+        {
+          "type": "interface",
+          "name": "dojo::contract::components::upgradeable::IUpgradeable",
+          "items": [
+            {
+              "type": "function",
+              "name": "upgrade",
+              "inputs": [
+                {
+                  "name": "new_class_hash",
+                  "type": "core::starknet::class_hash::ClassHash"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            }
+          ]
+        },
+        {
+          "type": "constructor",
+          "name": "constructor",
+          "inputs": []
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "struct",
+          "members": [
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash",
+              "kind": "data"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "Upgraded",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+              "kind": "nested"
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "enum",
+          "variants": []
+        },
+        {
+          "type": "event",
+          "name": "dojo_starter::systems::stark_age_verifier::stark_age_verifier::Event",
+          "kind": "enum",
+          "variants": [
+            {
+              "name": "UpgradeableEvent",
+              "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+              "kind": "nested"
+            },
+            {
+              "name": "WorldProviderEvent",
+              "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+              "kind": "nested"
+            }
+          ]
+        }
+      ],
+      "init_calldata": [],
+      "tag": "dojo_starter-stark_age_verifier",
+      "selector": "0x2883fb6812d4bec68de81ddb7f3decb40c495a28176ab901bf8786c07ce2250",
+      "systems": [
+        "register_proof",
+        "revoke_proof",
+        "upgrade"
+      ]
+    },
+    {
+      "address": "0x543d68f5670fdff0b9a6a952864c385534b1564c73414be5e55cdbc824fd6f1",
+      "class_hash": "0x410f307c9a21301a24bf29144784386acfafa3e8c548c62165b960523c35ae0",
       "abi": [
         {
           "type": "impl",
@@ -2163,6 +2462,10 @@
                 {
                   "name": "min_age_requirement",
                   "type": "core::integer::u8"
+                },
+                {
+                  "name": "user_id",
+                  "type": "core::felt252"
                 }
               ],
               "outputs": [
@@ -2231,6 +2534,18 @@
                 }
               ],
               "state_mutability": "view"
+            },
+            {
+              "type": "function",
+              "name": "set_verifier",
+              "inputs": [
+                {
+                  "name": "verifier_address",
+                  "type": "core::starknet::contract_address::ContractAddress"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
             }
           ]
         },
@@ -2356,6 +2671,7 @@
         "create_game",
         "join_game",
         "make_move",
+        "set_verifier",
         "upgrade"
       ]
     }
@@ -2364,7 +2680,7 @@
   "models": [
     {
       "members": [],
-      "class_hash": "0x6819ac946d0338773aca202192119747ff21577845e415a69ad7e96dcae8fab",
+      "class_hash": "0x6de8d6032b8ccdab354050b55378ecf8e421e9ae17f2a75088924ea0b0806ca",
       "tag": "dojo_starter-AgeVerification",
       "selector": "0x199cd6b3b2d2c952b93b54e99200f8185720e6674780a57897b4ac8a1f9c135"
     },
@@ -2382,7 +2698,7 @@
     },
     {
       "members": [],
-      "class_hash": "0x5ea9e6db6c40b8b848d0a648c6b6d4db4f8812ad4dd6e1b7128ab639beff2c3",
+      "class_hash": "0x78d14a35e88b1a030fe03392cde1d1bc1fde66c70ccc0a6356011778422d80",
       "tag": "dojo_starter-Identity",
       "selector": "0x2fb54ada557058ca7037f918aa08c2c0364b00a0b32ffed544df4ee7aceef08"
     },
@@ -2409,6 +2725,18 @@
       "class_hash": "0x450d801e29bcbdb33c4487c17b56ec822172101b319c24629a65d5ebd6fb228",
       "tag": "dojo_starter-TicTacToeGame",
       "selector": "0xa5dd37b030402d2d27ddea952878c18a3e7425de2b0980bf9ba660d0e53ce9"
+    },
+    {
+      "members": [],
+      "class_hash": "0x6bcf71094feb9077283d5e94e8bc20f110b6a33b992135f358d54170a128fa",
+      "tag": "dojo_starter-VerificationFact",
+      "selector": "0x7bf59197dd26699867d0d6ef87e5e6fe55aeaf98c303368c3830d6ea41fff84"
+    },
+    {
+      "members": [],
+      "class_hash": "0x74b1704bf1884fd8853e388117a35fda2096da0530e829ab687163c0d68f725",
+      "tag": "dojo_starter-VerificationToken",
+      "selector": "0x620a79e313c3b716efe841638935634fd9afc4883c550a81b9ff4244a6c4c0e"
     }
   ],
   "events": [
@@ -2417,6 +2745,12 @@
       "class_hash": "0x57d47ad092a7251f44a609988dd5ec9f0e98b7e18414f27b2463221e1448a29",
       "tag": "dojo_starter-AgeVerified",
       "selector": "0xd246b84d95a86caf8193616a5bee6c1088fe698cd97bb028c6a10111da7ab"
+    },
+    {
+      "members": [],
+      "class_hash": "0x76b7a575fb12206dd83e0a776a4ae97117cf58549517a7f61220be298abdec5",
+      "tag": "dojo_starter-FactRegistered",
+      "selector": "0x3e10c5d31d6718d79250347b252501b8af1b017dd78ac43f4d41654f20f0e70"
     },
     {
       "members": [],
@@ -2447,6 +2781,12 @@
       "class_hash": "0x230eecc57fafed34e962a655d958411f9e84bdf1c3abf223dde7bd93f346d9b",
       "tag": "dojo_starter-Moved",
       "selector": "0x504403e5c02b6442527721fc464d9ea5fc8f1ee600ab5ccd5c0845d36fd45f1"
+    },
+    {
+      "members": [],
+      "class_hash": "0xc9683ce048ea6f181b8f253f38131c14093b84c306bf3d8f6f1d5c33407484",
+      "tag": "dojo_starter-ProofVerified",
+      "selector": "0x49476309a741ed40f428be817e68a0625ccf1a451a5f229c495d2ac988a3b9e"
     }
   ],
   "external_contracts": []

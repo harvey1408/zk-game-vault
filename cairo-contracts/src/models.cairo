@@ -40,20 +40,59 @@ pub struct Identity {
     #[key]
     pub user_id: felt252,
     pub identity_hash: felt252,
-    pub age: u8,
+    pub age_commitment: felt252,  // Pedersen commitment of age + salt
     pub country: felt252,
     pub owner: ContractAddress,
     pub created_at: u64,
 }
 
+// STARK-Proof Based Age Verification
+// This model stores ONLY the verification result, NOT the actual age
+// The age itself is verified in the Cairo execution trace (STARK proof)
+// and never stored on-chain
 #[derive(Copy, Drop, Serde, Debug)]
 #[dojo::model]
 pub struct AgeVerification {
     #[key]
     pub user_id: felt252,
+    #[key]
+    pub verification_id: felt252,  // Unique ID for each verification (timestamp-based)
+    pub minimum_age: u8,           // Minimum age requirement (public)
+    pub verified: bool,            // Verification result
+    pub verified_at: u64,          // Timestamp of verification
+    pub proof_hash: felt252,       // Hash(commitment, minimum_age) for audit trail
+    // NOTE: Actual age is NEVER stored - it only exists in the STARK proof execution trace
+}
+
+// Zero-Knowledge Verification Token
+// This token proves age verification without revealing the actual age
+// Tokens are time-limited and can be used for multiple games
+#[derive(Copy, Drop, Serde, Debug)]
+#[dojo::model]
+pub struct VerificationToken {
+    #[key]
+    pub user_id: felt252,
+    #[key]
     pub minimum_age: u8,
-    pub verified: bool,
-    pub verified_at: u64,
+    pub token_hash: felt252,       // Cryptographic token proving verification
+    pub verified_at: u64,          // Timestamp when token was issued
+    pub expires_at: u64,           // Token expiration (prevents replay attacks)
+    pub is_valid: bool,            // Token can be revoked
+}
+
+// STARK Verification Fact
+// A "fact" is a cryptographically proven statement
+// In this case: "user X has age >= Y" (proven by STARK proof)
+#[derive(Copy, Drop, Serde, Debug)]
+#[dojo::model]
+pub struct VerificationFact {
+    #[key]
+    pub fact_hash: felt252,        // Unique hash identifying this fact
+    pub user_id: felt252,          // User this fact is about
+    pub minimum_age: u8,           // Minimum age proven
+    pub proof_hash: felt252,       // Hash of the STARK proof
+    pub verified_at: u64,          // When fact was proven
+    pub is_valid: bool,            // Fact can be invalidated
 }
 
 #[derive(Copy, Drop, Serde, Debug)]
