@@ -103,6 +103,19 @@ else
 fi
 
 echo ""
+echo "🔑 Setting prover public key in STARK verifier..."
+# Check if prover public key is set
+if [ -z "$PROVER_PUBLIC_KEY" ]; then
+    echo "⚠️  PROVER_PUBLIC_KEY not set in .env"
+    echo "   Run: cd ../frontend && npm run generate-prover-key"
+    echo "   Then add the public key to cairo-contracts/.env"
+else
+    echo "Prover Public Key: $PROVER_PUBLIC_KEY"
+    sozo execute dojo_starter-stark_age_verifier set_prover_pubkey $PROVER_PUBLIC_KEY --world $WORLD_ADDRESS --wait
+    echo "✅ Prover public key set in verifier contract"
+fi
+
+echo ""
 echo "✅ Deployment completed successfully!"
 echo ""
 echo "📝 Next Steps:"

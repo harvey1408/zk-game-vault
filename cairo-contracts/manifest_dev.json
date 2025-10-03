@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x57994b6a75fad550ca18b41ee82e2110e158c59028c4478109a67965a0e5b1e",
-    "address": "0x374e827796c6eead2f16bb4dac929f53db824b24a318107a82e8fd6497731aa",
-    "seed": "zkgamevault_identity_v7",
+    "address": "0x42d6ca4fda51a3ece1ea3f158e7a2cea7b6d2fda4ca9f7b0d310c551d2fac5a",
+    "seed": "zkgamevault_identity_v8",
     "name": "Dojo starter",
     "entrypoints": [
       "uuid",
@@ -1479,7 +1479,7 @@
   },
   "contracts": [
     {
-      "address": "0x13d7096d9453abc78463b3854d26de456fd4673b7272cc9f752b8e4b4284400",
+      "address": "0x55ae75967d676c4646cdfcc205a0bb1e8d3475acaf95f42b58ebc65833e6394",
       "class_hash": "0x4a54ed5744ddf80a50b2a7ee9e5f0992eb75c40040897ba06011b0d4b2559af",
       "abi": [
         {
@@ -1709,7 +1709,7 @@
       ]
     },
     {
-      "address": "0x60b8556f22e84d82f90285c005070903bab2702b7be91ed8f3e745d98a49272",
+      "address": "0x7b1cee5034a4b6d4d0302534f38555e8fe729b61b197623401c4e857c2a52e",
       "class_hash": "0x65b09c5f37301bef1e0f5fae98a4aba517d9e53fd04deeb685d8ba0e7f68f1",
       "abi": [
         {
@@ -2006,8 +2006,8 @@
       ]
     },
     {
-      "address": "0x315524193538375cb22b708756020a4168a47bf622f7813f4ce6d1dcaca1bd4",
-      "class_hash": "0x679cb3e35ca85dc2853401afac5c5d0551d8018f6fef0994c874a434a39a4c2",
+      "address": "0x11cc51177c2d88ed4cb12a808d1303115f3ab11f833d710a67583111d1160b4",
+      "class_hash": "0x4ac2bacf518543ef55dc86b494562e4bf0ee203eb5412c03bacef437046658d",
       "abi": [
         {
           "type": "impl",
@@ -2084,6 +2084,29 @@
           "items": [
             {
               "type": "function",
+              "name": "set_prover_pubkey",
+              "inputs": [
+                {
+                  "name": "pubkey",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
+              "name": "get_prover_pubkey",
+              "inputs": [],
+              "outputs": [
+                {
+                  "type": "core::felt252"
+                }
+              ],
+              "state_mutability": "view"
+            },
+            {
+              "type": "function",
               "name": "register_proof",
               "inputs": [
                 {
@@ -2104,6 +2127,14 @@
                 },
                 {
                   "name": "verification_output",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "sig_r",
+                  "type": "core::felt252"
+                },
+                {
+                  "name": "sig_s",
                   "type": "core::felt252"
                 }
               ],
@@ -2291,13 +2322,14 @@
       "tag": "dojo_starter-stark_age_verifier",
       "selector": "0x2883fb6812d4bec68de81ddb7f3decb40c495a28176ab901bf8786c07ce2250",
       "systems": [
+        "set_prover_pubkey",
         "register_proof",
         "revoke_proof",
         "upgrade"
       ]
     },
     {
-      "address": "0x543d68f5670fdff0b9a6a952864c385534b1564c73414be5e55cdbc824fd6f1",
+      "address": "0x5b6bec8f8db51640a3a61870d7dcd8c19d478a97b0161412d1df7ccf88f4f8f",
       "class_hash": "0x410f307c9a21301a24bf29144784386acfafa3e8c548c62165b960523c35ae0",
       "abi": [
         {

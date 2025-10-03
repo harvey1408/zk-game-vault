@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-prover-key": "ts-node scripts/generate-prover-key.ts"
   },
   "dependencies": {
     "@starknet-react/chains": "^5.0.3",
@@ -26,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

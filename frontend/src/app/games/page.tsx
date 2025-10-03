@@ -9,11 +9,7 @@ import { getPublicProvider } from "@/lib/starknet";
 import { useAccount } from "@starknet-react/core";
 import { getTicTacToeContract, getIdentityContract, getStarkVerifierContract } from "@/lib/contracts";
 import { retrieveAgeProof } from "@/lib/zkProofs";
-import {
-  prepareProofInputs,
-  generateStarkProof,
-  formatProofForContract,
-} from "@/lib/starkProofGenerator";
+import { generateSignedProof, formatSignedProofForContract } from "@/lib/proverClient";
 
 export default function GamesPage() {
   const [chainId, setChainId] = useState<string>("");
@@ -150,16 +146,25 @@ export default function GamesPage() {
                                 ? identityRes[2]
                                 : (identityRes as any)?.result?.[2]);
 
-                          const inputs = prepareProofInputs(
-                            userIdStr,
-                            localProof.age,
-                            localProof.salt,
-                            minAge,
-                            ageCommitment
-                          );
+                          // Call prover service with private inputs
+                          const proof = await generateSignedProof({
+                            age: localProof.age,
+                            salt: localProof.salt,
+                            minimum_age: minAge,
+                            age_commitment: ageCommitment,
+                            user_id: userIdStr,
+                          });
 
-                          const proof = await generateStarkProof(inputs);
-                          const calldata = formatProofForContract(proof);
+                          if (!proof.success || proof.is_valid !== 1) {
+                            throw new Error('Proof generation failed or invalid');
+                          }
+
+                          const calldata = formatSignedProofForContract(
+                            userIdStr,
+                            minAge,
+                            ageCommitment,
+                            proof
+                          );
                           const regTx = await starkVerifier.invoke("register_proof", calldata);
                           setCreateStatus("⏳ Waiting for proof confirmation...");
                           // @ts-ignore
@@ -298,24 +303,30 @@ export default function GamesPage() {
                                 ? identityRes[2]
                                 : (identityRes as any)?.result?.[2]);
 
-                          // Prepare proof inputs (age NEVER leaves browser)
-                          const inputs = prepareProofInputs(
+                          setJoinStatus("⚡ Generating cryptographic proof with trusted prover...");
+
+                          // Call prover service with private inputs
+                          const proof = await generateSignedProof({
+                            age: proofData.age,        // PRIVATE - sent to trusted prover
+                            salt: proofData.salt,       // PRIVATE - sent to trusted prover
+                            minimum_age: minReq,        // minimum_age (public)
+                            age_commitment: ageCommitment, // commitment (public)
+                            user_id: userIdStr,
+                          });
+
+                          if (!proof.success || proof.is_valid !== 1) {
+                            throw new Error('Proof generation failed or invalid');
+                          }
+
+                          setJoinStatus("📝 Registering signed proof on-chain (no age revealed)...");
+
+                          // Register proof on-chain with signature (age NOT included!)
+                          const calldata = formatSignedProofForContract(
                             userIdStr,
-                            proofData.age,        // PRIVATE - stays local
-                            proofData.salt,       // PRIVATE - stays local
-                            minReq,               // minimum_age (public)
-                            ageCommitment         // commitment (public)
+                            minReq,
+                            ageCommitment,
+                            proof
                           );
-
-                          setJoinStatus("⚡ Generating cryptographic proof...");
-
-                          // Generate STARK proof CLIENT-SIDE
-                          const proof = await generateStarkProof(inputs);
-
-                          setJoinStatus("📝 Registering proof on-chain (no age revealed)...");
-
-                          // Register proof on-chain (age NOT included!)
-                          const calldata = formatProofForContract(proof);
                           const proofTx = await starkVerifier.invoke("register_proof", calldata);
 
                           setJoinStatus("⏳ Waiting for proof confirmation...");
