@@ -2,25 +2,53 @@
 
 import { useAccount, useConnect, useDisconnect, useInjectedConnectors } from '@starknet-react/core';
 import { useEffect, useMemo, useState } from 'react';
+import { useWalletContext } from './WalletProvider';
 
 export function WalletConnect() {
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
+  const { connect, connectors, isPending } = useConnect();
   const { connectors: injected } = useInjectedConnectors({
     recommended: [],
     include: ["argentX", "braavos"],
     exclude: [],
   } as any);
   const { disconnect } = useDisconnect();
+  const { lastConnectedConnector, setLastConnectedConnector } = useWalletContext();
   const [mounted, setMounted] = useState(false);
+  const [isAutoConnecting, setIsAutoConnecting] = useState(false);
   const shortAddress = useMemo(() => {
     if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }, [address]);
 
+  const handleConnect = (connector: any) => {
+    setLastConnectedConnector(connector.id);
+    connect({ connector });
+  };
+
+  const handleDisconnect = () => {
+    setLastConnectedConnector(null);
+    disconnect();
+  };
+
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    if (!isConnected && lastConnectedConnector && !isPending && !isAutoConnecting) {
+      const connector = injected.find(c => c.id === lastConnectedConnector);
+      if (connector) {
+        setIsAutoConnecting(true);
+        console.log('Auto-connecting to:', connector.id);
+        connect({ connector });
+      }
+    }
+  }, [isConnected, lastConnectedConnector, injected, connect, isPending, isAutoConnecting]);
+
+  useEffect(() => {
+    if (isConnected) {
+      setIsAutoConnecting(false);
+    }
+  }, [isConnected]);
 
   if (!mounted) {
     return (
@@ -43,7 +71,7 @@ export function WalletConnect() {
           </span>
         </div>
         <button
-          onClick={() => disconnect()}
+          onClick={handleDisconnect}
           className="px-6 py-3 backdrop-void cyber-border-purple hover:glow-error text-white rounded-xl transition-all duration-300 text-header text-sm font-bold hover:scale-105"
           aria-label="Disconnect wallet"
         >
@@ -60,13 +88,14 @@ export function WalletConnect() {
       {available.map((connector: any) => (
         <button
           key={connector.id}
-          onClick={() => connect({ connector })}
-          className="group relative px-8 py-3 bg-[var(--cyber-blue)] hover:bg-[var(--cyber-blue)]/90 text-black font-bold rounded-xl transition-all duration-300 text-header text-sm overflow-hidden hover:scale-105"
+          onClick={() => handleConnect(connector)}
+          disabled={isAutoConnecting || isPending}
+          className="group relative px-8 py-3 bg-[var(--cyber-blue)] hover:bg-[var(--cyber-blue)]/90 text-black font-bold rounded-xl transition-all duration-300 text-header text-sm overflow-hidden hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed"
           aria-label={`Connect ${connector.name}`}
         >
           <span className="relative z-10 flex items-center gap-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--token-gold)] animate-pulse-glow" aria-hidden="true" />
-            Connect {connector.name}
+            {isAutoConnecting ? 'Connecting...' : `Connect ${connector.name}`}
           </span>
           <div className="absolute inset-0 bg-gradient-to-r from-[var(--cyber-blue)] via-[var(--neon-cyan)] to-[var(--cyber-purple)] opacity-0 group-hover:opacity-100 animate-gradient-shift" />
         </button>

@@ -114,10 +114,9 @@ export function prepareIdentityCreation(
     userId: BigInt(userId).toString(),
     ageCommitment,
     country: BigInt(country).toString(),
-    // Metadata for display (not sent to contract)
     metadata: {
-      age,  // For local display only
-      salt,  // For verification later
+      age,
+      salt,
     },
   };
 }
@@ -190,11 +189,9 @@ export function exportProofData(userId: string): string | null {
  */
 export function importProofData(userId: string, encryptedData: string): boolean {
   try {
-    // Validate the data
     const decrypted = atob(encryptedData);
     JSON.parse(decrypted);
 
-    // Store it
     localStorage.setItem(`zkproof_${userId}`, encryptedData);
     return true;
   } catch {
@@ -204,7 +201,7 @@ export function importProofData(userId: string, encryptedData: string): boolean 
 
 export function generateTestProof(age: number = 25) {
   const userId = Math.floor(Math.random() * 1000000).toString();
-  const country = '1'; // USA
+  const country = '1';
 
   return prepareIdentityCreation(userId, age, country);
 }

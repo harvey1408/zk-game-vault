@@ -35,21 +35,16 @@ mod tests {
 
     #[test]
     fn test_world_test_set() {
-        // Initialize test environment
         let caller: ContractAddress = 0.try_into().unwrap();
         let ndef = namespace_def();
 
-        // Register the resources.
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [ndef].span());
 
-        // Ensures permissions and initializations are synced.
         world.sync_perms_and_inits(contract_defs());
 
-        // Test initial position
         let mut position: Position = world.read_model(caller);
         assert(position.vec.x == 0 && position.vec.y == 0, 'initial position wrong');
 
-        // Test write_model_test
         position.vec.x = 122;
         position.vec.y = 88;
 
@@ -58,7 +53,6 @@ mod tests {
         let mut position: Position = world.read_model(caller);
         assert(position.vec.y == 88, 'write_value_from_id failed');
 
-        // Test model deletion
         world.erase_model(@position);
         let position: Position = world.read_model(caller);
         assert(position.vec.x == 0 && position.vec.y == 0, 'erase_model failed');

@@ -1,6 +1,5 @@
 "use client";
 
-import { ParticleBackground } from "@/components/ParticleBackground";
 import { WalletConnect } from "@/components/WalletConnect";
 import ScrollReveal from "@/components/ScrollReveal";
 import { useAccount } from "@starknet-react/core";
@@ -13,6 +12,7 @@ import {
   retrieveAgeProof,
   clearAgeProof,
 } from "@/lib/zkProofs";
+import { saveWalletToUserMapping, saveUserName } from "@/lib/playerNames";
 
 export default function IdentityPage() {
   const { isConnected, account } = useAccount() as any;
@@ -24,7 +24,6 @@ export default function IdentityPage() {
   const [hasIdentity, setHasIdentity] = useState<boolean>(false);
   const [proofData, setProofData] = useState<{ age: number; salt: string } | null>(null);
 
-  // Check for existing identity on mount
   useEffect(() => {
     try {
       const savedUserId = localStorage.getItem('zkgv_user_id');
@@ -40,65 +39,59 @@ export default function IdentityPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black relative circuit-pattern">
-      <ParticleBackground />
-      <div className="fixed inset-0 circuit-bg pointer-events-none z-0" />
+    <div className="min-h-screen bg-black relative">
+      <div className="bg-gradient-radial fixed inset-0 pointer-events-none" />
 
       <div className="relative z-10">
-        <header className="holographic-border border-b backdrop-void">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5 flex justify-between items-center flex-wrap gap-4">
-            <Link href="/" className="text-2xl md:text-3xl font-black text-header gradient-text-holographic tracking-tight">
+        <header className="header">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <Link href="/" className="text-2xl font-bold text-display text-gradient">
               ZKGameVault
             </Link>
             <WalletConnect />
           </div>
         </header>
 
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-          <div className="max-w-4xl mx-auto">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+          <div className="max-w-5xl mx-auto">
             <ScrollReveal>
-              <h1 className="text-4xl md:text-6xl font-black text-header mb-4 gradient-text-holographic leading-tight">
-                Create Your Identity
-              </h1>
-            </ScrollReveal>
-            <ScrollReveal delayMs={100}>
-              <p className="text-[var(--text-secondary)] text-lg md:text-xl text-body mb-10">
-                Generate a privacy-preserving profile. Prove facts (like age range) without revealing your data.
-              </p>
+              <div className="text-center mb-12">
+                <h1 className="text-3xl md:text-5xl font-bold text-display mb-3">
+                  Create Your Identity
+                </h1>
+                <p className="text-[var(--text-secondary)] text-base md:text-lg max-w-2xl mx-auto">
+                  Generate a privacy-preserving profile. Prove facts (like age range) without revealing your data.
+                </p>
+              </div>
             </ScrollReveal>
 
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-6">
               <ScrollReveal>
-                <div className="holographic-card rounded-2xl p-6 lg:col-span-2 encryption-overlay">
-                  <h2 className="text-2xl font-bold text-header mb-4">Identity Details</h2>
-                  <div className="grid md:grid-cols-2 gap-5">
+                <div className="card-elevated p-6 lg:col-span-2">
+                  <h2 className="text-xl font-bold text-display mb-6">Identity Details</h2>
+                  <div className="grid md:grid-cols-2 gap-4">
                     <label className="block">
-                      <span className="text-sm text-[var(--text-secondary)]">Display Name</span>
-                      <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="mt-2 w-full rounded-xl px-4 py-3 backdrop-void holographic-border outline-none text-body" placeholder="e.g., vault_player" />
+                      <span className="text-sm text-[var(--text-tertiary)] uppercase tracking-wide mb-2 block">Display Name</span>
+                      <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="input" placeholder="e.g., vault_player" />
                     </label>
                     <label className="block">
-                      <span className="text-sm text-[var(--text-secondary)]">Your Age</span>
-                      <input type="number" min={0} value={age} onChange={(e) => setAge(Number(e.target.value || 0))} className="mt-2 w-full rounded-xl px-4 py-3 backdrop-void holographic-border outline-none text-body" placeholder="Enter your age (kept local)" />
+                      <span className="text-sm text-[var(--text-tertiary)] uppercase tracking-wide mb-2 block">Your Age</span>
+                      <input type="number" min={0} value={age} onChange={(e) => setAge(Number(e.target.value || 0))} className="input" placeholder="Enter your age (kept local)" />
                     </label>
                     <label className="block">
-                      <span className="text-sm text-[var(--text-secondary)]">Country (optional)</span>
-                      <input value={country} onChange={(e) => setCountry(e.target.value)} className="mt-2 w-full rounded-xl px-4 py-3 backdrop-void holographic-border outline-none text-body" placeholder="e.g., US" />
+                      <span className="text-sm text-[var(--text-tertiary)] uppercase tracking-wide mb-2 block">Country (optional)</span>
+                      <input value={country} onChange={(e) => setCountry(e.target.value)} className="input" placeholder="e.g., US" />
                     </label>
                     <label className="block md:col-span-2">
-                      <span className="text-sm text-[var(--text-secondary)]">Optional Bio</span>
-                      <textarea className="mt-2 w-full rounded-xl px-4 py-3 backdrop-void holographic-border outline-none text-body" rows={4} placeholder="Tell others about your play style (kept local)"></textarea>
+                      <span className="text-sm text-[var(--text-tertiary)] uppercase tracking-wide mb-2 block">Optional Bio</span>
+                      <textarea className="input" rows={4} placeholder="Tell others about your play style (kept local)"></textarea>
                     </label>
                   </div>
 
                   <div className="flex items-center gap-4 mt-8 flex-wrap">
-                    <button className="group relative px-8 md:px-12 py-4 md:py-5 bg-[var(--cyber-blue)] hover:bg-[var(--cyber-blue)]/90 text-black font-bold rounded-xl transition-all duration-300 text-header text-base md:text-lg overflow-hidden interactive-glow disabled:opacity-60 disabled:cursor-not-allowed"
+                    <button className="btn btn-primary"
                       disabled={!isConnected || hasIdentity}
                       onClick={async (e) => {
-                        const container = (e.currentTarget.closest('.encryption-overlay') as HTMLElement) || undefined;
-                        if (container) {
-                          container.classList.add('active');
-                          setTimeout(() => container.classList.remove('active'), 2100);
-                        }
                         setTxStatus("Generating ZK proof...");
                         try {
                           const client = account ?? getPublicProvider();
@@ -112,17 +105,15 @@ export default function IdentityPage() {
                             return;
                           }
 
-                          // Generate user ID
                           const userId = Date.now().toString();
 
-                          // Prepare ZK proof identity data
                           const identityData = prepareIdentityCreation(userId, age, country);
 
                           setTxStatus("📝 Submitting to blockchain...");
 
-                          // Call create_identity with new signature: (user_id, age_commitment, country)
                           const tx = await contract.invoke("create_identity", [
                             identityData.userId,
+                            displayName,
                             identityData.ageCommitment,
                             identityData.country,
                           ]);
@@ -136,10 +127,12 @@ export default function IdentityPage() {
                           setHasIdentity(true);
                           setProofData(identityData.metadata);
 
-                          // Save user ID
                           try {
                             localStorage.setItem('zkgv_user_id', userId);
                             setLastUserId(userId);
+                            const walletAddress = String(account?.address || '');
+                            saveWalletToUserMapping(walletAddress, userId);
+                            saveUserName(userId, displayName);
                           } catch {}
                         } catch (err: any) {
                           setTxStatus(`❌ ${err?.message || "Failed to submit transaction"}`);
@@ -172,7 +165,7 @@ export default function IdentityPage() {
                       </button>
                     )}
                     {txStatus && (
-                      <div className="px-4 py-2 text-sm text-[var(--text-secondary)] w-full">
+                      <div className="px-4 py-3 text-sm text-[var(--text-secondary)] w-full bg-[var(--bg-tertiary)] rounded-lg border border-[var(--border-secondary)]">
                         {txStatus}
                       </div>
                     )}
@@ -181,22 +174,22 @@ export default function IdentityPage() {
               </ScrollReveal>
 
               <ScrollReveal delayMs={100}>
-                <aside className="holographic-card rounded-2xl p-6">
-                  <h3 className="text-xl font-semibold text-header mb-3">Privacy Notes</h3>
-                  <ul className="list-disc list-inside text-[var(--text-secondary)] text-sm leading-7">
+                <aside className="card-elevated p-6">
+                  <h3 className="text-lg font-semibold text-display mb-4">Privacy Notes</h3>
+                  <ul className="list-disc list-inside text-[var(--text-secondary)] text-sm space-y-2">
                     <li>Proofs reveal only what you choose (e.g., age ≥ 18).</li>
                     <li>Your raw data never leaves your device.</li>
                     <li>Portable profile to use across Dojo games.</li>
                   </ul>
                   {lastUserId && (
-                    <div className="mt-6 pt-6 border-t border-[var(--cyber-purple)]/30">
-                      <h4 className="text-sm font-semibold text-header mb-2">Your Identity</h4>
-                      <div className="text-xs text-[var(--text-secondary)] space-y-1">
-                        <div>User ID: <span className="font-mono text-[var(--cyber-blue)]">{lastUserId}</span></div>
+                    <div className="mt-6 pt-6 border-t border-[var(--border-secondary)]">
+                      <h4 className="text-sm font-semibold text-display mb-3 uppercase tracking-wide">Your Identity</h4>
+                      <div className="text-xs text-[var(--text-secondary)] space-y-2">
+                        <div>User ID: <span className="font-mono text-[var(--accent-primary)]">{lastUserId}</span></div>
                         {proofData && (
                           <>
-                            <div>Age (local): <span className="font-mono text-[var(--neon-cyan)]">{proofData.age}</span></div>
-                            <div className="text-[10px] break-all">Salt: {proofData.salt.substring(0, 20)}...</div>
+                            <div>Age (local): <span className="font-mono text-[var(--accent-warm)]">{proofData.age}</span></div>
+                            <div className="text-[10px] break-all text-[var(--text-tertiary)]">Salt: {proofData.salt.substring(0, 20)}...</div>
                           </>
                         )}
                       </div>
@@ -209,30 +202,27 @@ export default function IdentityPage() {
             {/* Next Steps Section */}
             {hasIdentity && (
               <ScrollReveal delayMs={200}>
-                <div className="mt-12 holographic-card rounded-2xl p-8">
-                  <h2 className="text-3xl font-bold text-header mb-2 gradient-text-holographic">What's Next?</h2>
-                  <p className="text-[var(--text-secondary)] mb-6">
+                <div className="mt-12 card-elevated p-8">
+                  <h2 className="text-2xl font-bold text-display mb-2">What's Next?</h2>
+                  <p className="text-[var(--text-secondary)] text-sm mb-6">
                     Your identity is ready! Age verification happens automatically when you join a game.
                   </p>
 
                   <div className="grid md:grid-cols-2 gap-6">
-                    <div className="backdrop-void holographic-border rounded-xl p-6">
+                    <div className="card p-6">
                       <div className="text-4xl mb-3">🎮</div>
-                      <h3 className="text-xl font-semibold text-header mb-2">Play Games</h3>
+                      <h3 className="text-lg font-semibold text-display mb-2">Play Games</h3>
                       <p className="text-sm text-[var(--text-secondary)] mb-4">
                         Join privacy-gated games. Your age will be verified with ZK proofs automatically.
                       </p>
-                      <Link
-                        href="/games"
-                        className="inline-block px-6 py-3 bg-[var(--cyber-blue)] hover:bg-[var(--cyber-blue)]/90 text-black font-bold rounded-xl transition-all text-sm"
-                      >
+                      <Link href="/games" className="btn btn-primary inline-block">
                         Browse Games →
                       </Link>
                     </div>
 
-                    <div className="backdrop-void holographic-border rounded-xl p-6">
+                    <div className="card p-6">
                       <div className="text-4xl mb-3">🔐</div>
-                      <h3 className="text-xl font-semibold text-header mb-2">Privacy Guaranteed</h3>
+                      <h3 className="text-lg font-semibold text-display mb-2">Privacy Guaranteed</h3>
                       <p className="text-sm text-[var(--text-secondary)]">
                         Your exact age is never revealed on-chain. Only proof that you meet requirements.
                       </p>

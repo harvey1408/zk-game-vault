@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useAccount } from "@starknet-react/core";
 import { getTicTacToeContract } from "@/lib/contracts";
+import { getPlayerName } from "@/lib/playerNames";
 
 export default function TicTacToeGamePage() {
   const params = useParams<{ gameId: string }>();
@@ -25,11 +26,12 @@ export default function TicTacToeGamePage() {
   const [isFinished, setIsFinished] = useState<boolean>(false);
   const [isDraw, setIsDraw] = useState<boolean>(false);
   const [myUserId, setMyUserId] = useState<string>("");
+  const [player1Name, setPlayer1Name] = useState<string>("");
+  const [player2Name, setPlayer2Name] = useState<string>("");
   const myAddress = useMemo(() => {
     try { return String((account as any)?.address || ""); } catch { return ""; }
   }, [account]);
 
-  // Helpers to normalize on-chain address formats for safe comparison
   const toBigIntSafe = useCallback((value: any): bigint => {
     try {
       if (value === null || value === undefined) return BigInt(0);
@@ -56,6 +58,25 @@ export default function TicTacToeGamePage() {
       setMyUserId(userId);
     } catch {}
   }, []);
+
+  // Fetch player names from wallet addresses
+  const fetchPlayerNames = useCallback(async (playerXAddr: string, playerOAddr: string) => {
+    if (!account) return;
+
+    try {
+      if (playerXAddr && playerXAddr !== "0x0") {
+        const name1 = await getPlayerName(account, playerXAddr);
+        setPlayer1Name(name1);
+      }
+
+      if (playerOAddr && playerOAddr !== "0x0") {
+        const name2 = await getPlayerName(account, playerOAddr);
+        setPlayer2Name(name2);
+      }
+    } catch (error) {
+      console.error('Failed to fetch player names:', error);
+    }
+  }, [account]);
 
   // Load game state
   const loadGameState = useCallback(async () => {
@@ -84,6 +105,8 @@ export default function TicTacToeGamePage() {
       setIsFinished(finished);
       setIsDraw(draw);
 
+      await fetchPlayerNames(playerXAddr, playerOAddr);
+
       // Determine game state - check if player_o is set
       const zeroAddr = BigInt(0);
       const winnerBI = toBigIntSafe(winnerAddr);
@@ -96,7 +119,7 @@ export default function TicTacToeGamePage() {
         setGameState("waiting");
       }
     } catch {}
-  }, [account, gameId]);
+  }, [account, gameId, fetchPlayerNames]);
 
   useEffect(() => {
     loadGameState();
@@ -123,7 +146,6 @@ export default function TicTacToeGamePage() {
         return;
       }
 
-      // Compare wallet addresses for turn checking
       const myAddr = toBigIntSafe((account as any)?.address);
       if (toBigIntSafe(current) !== myAddr) {
         setStatus("❌ Not your turn!");
@@ -147,37 +169,74 @@ export default function TicTacToeGamePage() {
     }
   };
 
+  const cancelGame = async () => {
+    try {
+      setStatus("Cancelling game...");
+      if (!account) {
+        setStatus("❌ Wallet not connected.");
+        return;
+      }
+      const contract = getTicTacToeContract(account);
+      if (!contract) {
+        setStatus("❌ Contract not configured.");
+        return;
+      }
+
+      // Only game creator can cancel
+      const myAddr = toBigIntSafe((account as any)?.address);
+      const player1Addr = toBigIntSafe(player1);
+      if (myAddr !== player1Addr) {
+        setStatus("❌ Only game creator can cancel.");
+        return;
+      }
+
+      const tx: any = await contract.invoke("cancel_game", [gameId]);
+      setStatus("⏳ Cancelling game...");
+      await account.waitForTransaction(tx?.transaction_hash ?? tx?.hash);
+      setStatus("✅ Game cancelled!");
+
+      setTimeout(loadGameState, 1000);
+    } catch (e: any) {
+      setStatus(`❌ ${e?.message || "Failed to cancel game"}`);
+    }
+  };
+
+  const isGameCreator = toBigIntSafe(myAddress) === toBigIntSafe(player1);
+  
+  const showCancelButton = gameState === "waiting" && isGameCreator && !isFinished;
+
   return (
-    <div className="min-h-screen bg-black relative circuit-pattern">
-      <ParticleBackground />
-      <div className="fixed inset-0 circuit-bg pointer-events-none z-0" />
+    <div className="min-h-screen bg-black relative">
+      <div className="bg-gradient-radial fixed inset-0 pointer-events-none" />
 
       <div className="relative z-10">
-        <header className="holographic-border border-b backdrop-void">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5 flex justify-between items-center flex-wrap gap-4">
-            <Link href="/" className="text-2xl md:text-3xl font-black text-header gradient-text-holographic tracking-tight">
+        <header className="header">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <Link href="/" className="text-2xl font-bold text-display text-gradient">
               ZKGameVault
             </Link>
             <WalletConnect />
           </div>
         </header>
 
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-          <div className="max-w-4xl mx-auto">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+          <div className="max-w-5xl mx-auto">
             <ScrollReveal>
-              <h1 className="text-3xl md:text-5xl font-black text-header mb-2 gradient-text-holographic leading-tight text-center">
-                Tic-Tac-Toe
-              </h1>
-              <p className="text-[var(--text-secondary)] text-center mb-8">
-                Game ID: {gameId.toString()}
-              </p>
+              <div className="text-center mb-12">
+                <h1 className="text-3xl md:text-5xl font-bold text-display mb-3">
+                  Tic-Tac-Toe
+                </h1>
+                <p className="text-[var(--text-secondary)] text-sm">
+                  Game #{gameId.toString()}
+                </p>
+              </div>
             </ScrollReveal>
 
-            <div className="grid lg:grid-cols-3 gap-8">
+            <div className="grid lg:grid-cols-3 gap-6">
               {/* Game Board */}
               <ScrollReveal delayMs={100}>
-                <div className="lg:col-span-2 holographic-card rounded-2xl p-8">
-                  <div className="grid grid-cols-3 gap-4 mx-auto w-full max-w-md mb-6">
+                <div className="lg:col-span-2 card-elevated p-6 md:p-8">
+                  <div className="grid grid-cols-3 gap-3 md:gap-4 mx-auto w-full max-w-md mb-6">
                     {board.map((cell, idx) => (
                       <button
                         key={idx}
@@ -188,11 +247,9 @@ export default function TicTacToeGamePage() {
                           cell !== 0
                         }
                         className={`
-                          h-24 md:h-28 rounded-xl holographic-border backdrop-void interactive-glow text-4xl md:text-5xl font-black
-                          transition-all duration-300
-                          ${cell === 1 ? "text-[var(--cyber-blue)]" : ""}
-                          ${cell === 2 ? "text-[var(--cyber-purple)]" : ""}
-                          {toBigIntSafe(current) === myAddrBI && cell === 0 && gameState === "playing" ? "hover:glow-cyan cursor-pointer" : "cursor-not-allowed opacity-75"}
+                          game-cell h-24 md:h-28 text-4xl md:text-5xl
+                          ${cell === 1 ? "cell-x" : ""}
+                          ${cell === 2 ? "cell-o" : ""}
                         `}
                       >
                         {cell === 1 ? "X" : cell === 2 ? "O" : ""}
@@ -201,7 +258,7 @@ export default function TicTacToeGamePage() {
                   </div>
 
                   {status && (
-                    <div className="text-center text-sm text-[var(--text-secondary)] mb-4">
+                    <div className="text-center text-sm text-[var(--text-secondary)] mb-4 p-3 bg-[var(--bg-tertiary)] rounded-lg border border-[var(--border-secondary)]">
                       {status}
                     </div>
                   )}
@@ -209,12 +266,22 @@ export default function TicTacToeGamePage() {
                   {gameState === "finished" && (
                     <div className="text-center">
                       {isDraw ? (
-                        <div className="inline-block px-6 py-3 rounded-xl bg-[var(--text-secondary)] text-black font-bold text-lg">
-                          🤝 Draw!
+                        <div className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[var(--text-secondary)]/10 border border-[var(--text-secondary)]/20 text-[var(--text-secondary)] font-semibold">
+                          <span>🤝</span>
+                          <span>Draw!</span>
                         </div>
                       ) : (
-                        <div className="inline-block px-6 py-3 rounded-xl bg-[var(--cyber-blue)] text-black font-bold text-lg">
-                          🏆 Winner: {toBigIntSafe(winner) === myAddrBI ? "You!" : `Player ${winner}`}
+                        <div className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/20 text-[var(--accent-primary)] font-semibold">
+                          <span>🏆</span>
+                          <span>
+                            Winner: {toBigIntSafe(winner) === myAddrBI 
+                              ? "You!" 
+                              : (toBigIntSafe(winner) === toBigIntSafe(player1) 
+                                  ? (player1Name || `${player1.slice(0, 6)}...${player1.slice(-4)}`) 
+                                  : (player2Name || `${player2.slice(0, 6)}...${player2.slice(-4)}`)
+                                )
+                            }
+                          </span>
                         </div>
                       )}
                     </div>
@@ -224,52 +291,66 @@ export default function TicTacToeGamePage() {
 
               {/* Game Info Sidebar */}
               <ScrollReveal delayMs={200}>
-                <aside className="holographic-card rounded-2xl p-6">
-                  <h3 className="text-xl font-semibold text-header mb-4">Game Status</h3>
+                <aside className="card-elevated p-6">
+                  <h3 className="text-lg font-semibold text-display mb-6">Game Status</h3>
 
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {/* Game State */}
                     <div>
-                      <div className="text-xs text-[var(--text-secondary)] mb-1">State</div>
-                      <div className={`
-                        inline-block px-3 py-1 text-xs font-semibold rounded-full
-                        ${gameState === "waiting" ? "bg-yellow-500/20 text-yellow-400" : ""}
-                        ${gameState === "playing" ? "bg-green-500/20 text-green-400" : ""}
-                        ${gameState === "finished" ? "bg-blue-500/20 text-blue-400" : ""}
-                      `}>
-                        {gameState === "waiting" && "⏳ Waiting for player 2"}
-                        {gameState === "playing" && "▶️ In Progress"}
-                        {gameState === "finished" && "✅ Finished"}
+                      <div className="text-xs text-[var(--text-tertiary)] mb-2 uppercase tracking-wide">State</div>
+                      <div className={`badge ${
+                        gameState === "waiting" ? "badge-warning" : 
+                        gameState === "playing" ? "badge-success" : 
+                        "badge-primary"
+                      }`}>
+                        {gameState === "waiting" && (
+                          <>
+                            <span className="status-dot status-warning"></span>
+                            <span>Waiting for player 2</span>
+                          </>
+                        )}
+                        {gameState === "playing" && (
+                          <>
+                            <span className="status-dot status-success"></span>
+                            <span>In Progress</span>
+                          </>
+                        )}
+                        {gameState === "finished" && (
+                          <>
+                            <span className="status-dot" style={{background: 'var(--accent-primary)'}}></span>
+                            <span>Finished</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
                     {/* Players */}
                     <div>
-                      <div className="text-xs text-[var(--text-secondary)] mb-2">Players</div>
-                      <div className="space-y-2">
+                      <div className="text-xs text-[var(--text-tertiary)] mb-3 uppercase tracking-wide">Players</div>
+                      <div className="space-y-3">
                         {player1 && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[var(--cyber-blue)] font-bold">X</span>
-                            <span className="text-xs font-mono truncate">
-                              {toBigIntSafe(player1) === myAddrBI ? "You" : player1}
+                          <div className="flex items-center gap-3 p-2 rounded-lg bg-[var(--bg-tertiary)]">
+                            <span className="flex items-center justify-center w-8 h-8 rounded-md bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] font-bold text-sm">X</span>
+                            <span className="text-sm font-medium truncate flex-1">
+                              {toBigIntSafe(player1) === myAddrBI ? "You" : player1Name || `${player1.slice(0, 6)}...${player1.slice(-4)}`}
                             </span>
                             {toBigIntSafe(current) === toBigIntSafe(player1) && gameState === "playing" && (
-                              <span className="text-xs text-[var(--cyber-blue)]">← Turn</span>
+                              <span className="text-xs text-[var(--accent-primary)] font-medium">Turn</span>
                             )}
                           </div>
                         )}
                         {player2 && player2 !== "0" ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-[var(--cyber-purple)] font-bold">O</span>
-                            <span className="text-xs font-mono truncate">
-                              {toBigIntSafe(player2) === myAddrBI ? "You" : player2}
+                          <div className="flex items-center gap-3 p-2 rounded-lg bg-[var(--bg-tertiary)]">
+                            <span className="flex items-center justify-center w-8 h-8 rounded-md bg-[var(--accent-warm)]/10 text-[var(--accent-warm)] font-bold text-sm">O</span>
+                            <span className="text-sm font-medium truncate flex-1">
+                              {toBigIntSafe(player2) === myAddrBI ? "You" : player2Name || `${player2.slice(0, 6)}...${player2.slice(-4)}`}
                             </span>
                             {toBigIntSafe(current) === toBigIntSafe(player2) && gameState === "playing" && (
-                              <span className="text-xs text-[var(--cyber-purple)]">← Turn</span>
+                              <span className="text-xs text-[var(--accent-warm)] font-medium">Turn</span>
                             )}
                           </div>
                         ) : (
-                          <div className="text-xs text-[var(--text-secondary)]">
+                          <div className="text-sm text-[var(--text-tertiary)] p-2">
                             Waiting for player 2...
                           </div>
                         )}
@@ -279,8 +360,8 @@ export default function TicTacToeGamePage() {
                     {/* Current Turn */}
                     {gameState === "playing" && (
                       <div>
-                        <div className="text-xs text-[var(--text-secondary)] mb-1">Current Turn</div>
-                        <div className={`text-sm font-semibold ${toBigIntSafe(current) === myAddrBI ? "text-[var(--neon-cyan)]" : "text-[var(--text-primary)]"}`}>
+                        <div className="text-xs text-[var(--text-tertiary)] mb-2 uppercase tracking-wide">Current Turn</div>
+                        <div className={`text-sm font-semibold ${toBigIntSafe(current) === myAddrBI ? "text-[var(--accent-primary)]" : "text-[var(--text-secondary)]"}`}>
                           {toBigIntSafe(current) === myAddrBI ? "Your turn!" : "Opponent's turn"}
                         </div>
                       </div>
@@ -288,18 +369,27 @@ export default function TicTacToeGamePage() {
 
                     {/* Share Game Link */}
                     {gameState === "waiting" && (
-                      <div className="pt-4 border-t border-[var(--cyber-purple)]/30">
-                        <div className="text-xs text-[var(--text-secondary)] mb-2">Share Game</div>
+                      <div className="pt-4 border-t border-[var(--border-secondary)]">
+                        <div className="text-xs text-[var(--text-tertiary)] mb-3 uppercase tracking-wide">Share Game</div>
                         <button
                           onClick={() => {
                             const url = window.location.href;
                             navigator.clipboard.writeText(url);
                             setStatus("✅ Link copied to clipboard!");
                           }}
-                          className="w-full px-4 py-2 bg-[var(--cyber-purple)] hover:bg-[var(--cyber-purple)]/90 text-white text-xs font-bold rounded-lg transition-all"
+                          className="btn btn-primary w-full mb-2"
                         >
                           Copy Game Link
                         </button>
+                        {showCancelButton && (
+                          <button
+                            onClick={cancelGame}
+                            className="btn btn-secondary w-full"
+                            style={{borderColor: 'var(--status-error)', color: 'var(--status-error)'}}
+                          >
+                            Cancel Game
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -310,9 +400,10 @@ export default function TicTacToeGamePage() {
             <div className="mt-8 text-center">
               <Link
                 href="/games"
-                className="inline-block px-8 py-3 backdrop-void holographic-border hover:glow-purple text-white font-bold rounded-xl transition-all duration-300 text-header interactive-glow"
+                className="btn btn-secondary inline-flex items-center gap-2"
               >
-                ← Back to Games
+                <span>←</span>
+                <span>Back to Games</span>
               </Link>
             </div>
           </div>

@@ -51,11 +51,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProofResp
       }, { status: 400 });
     }
 
-    // STEP 1: Verify commitment (Cairo prover logic)
+    // STEP 1: Verify commitment
     const ageFelt = BigInt(age).toString();
     const computedCommitment = hash.computePedersenHash(ageFelt, salt);
 
-    // Normalize for comparison
     const computedBigInt = BigInt(computedCommitment);
     const expectedBigInt = typeof age_commitment === 'string'
       ? BigInt(age_commitment)
@@ -97,7 +96,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProofResp
     }
 
     // Sign with prover's private key
-    const msgHash = message; // Already a hex string from computePedersenHash
+    const msgHash = message;
     const signature = ec.starkCurve.sign(msgHash, proverPrivateKey);
 
     return NextResponse.json({

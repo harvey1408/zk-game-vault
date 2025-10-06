@@ -1,8 +1,8 @@
-use dojo_starter::models::{Identity, AgeVerification};
+use dojo_starter::models::Identity;
 
 #[starknet::interface]
 pub trait IIdentityVault<T> {
-    fn create_identity(ref self: T, user_id: felt252, age_commitment: felt252, country: felt252);
+    fn create_identity(ref self: T, user_id: felt252, name: ByteArray, age_commitment: felt252, country: felt252);
     fn verify_age(
         ref self: T,
         user_id: felt252,
@@ -45,6 +45,7 @@ pub mod identity_vault {
         fn create_identity(
             ref self: ContractState,
             user_id: felt252,
+            name: ByteArray,
             age_commitment: felt252,
             country: felt252
         ) {
@@ -63,16 +64,15 @@ pub mod identity_vault {
             let identity = Identity {
                 user_id,
                 identity_hash,
-                age_commitment,  // Store only the commitment, not the actual age
+                name,
+                age_commitment,
                 country,
                 owner: caller,
                 created_at,
             };
 
-            // Write identity to world
             world.write_model(@identity);
 
-            // Emit identity created event
             world.emit_event(@IdentityCreated {
                 user_id,
                 identity_hash,
@@ -89,7 +89,6 @@ pub mod identity_vault {
         ) -> bool {
             let mut world = self.world_default();
 
-            // Read the identity from world
             let identity: Identity = world.read_model(user_id);
 
             // ZK Proof Verification:
@@ -118,22 +117,21 @@ pub mod identity_vault {
                 user_id,
                 verification_id,
                 minimum_age,
-                verified: true,  // Always true if we reach this point (assertion passed)
+                verified: true,
                 verified_at,
                 proof_hash,
             };
 
-            // Write verification to world
             world.write_model(@verification);
 
             // Emit verification event (without revealing actual age)
             world.emit_event(@AgeVerified {
                 user_id,
                 minimum_age,
-                verified: true,  // Always true if we reach this point
+                verified: true,
             });
 
-            true  // Return true if all verifications passed
+            true
         }
 
         fn get_identity(self: @ContractState, user_id: felt252) -> Identity {

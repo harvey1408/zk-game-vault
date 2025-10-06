@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x57994b6a75fad550ca18b41ee82e2110e158c59028c4478109a67965a0e5b1e",
-    "address": "0x42d6ca4fda51a3ece1ea3f158e7a2cea7b6d2fda4ca9f7b0d310c551d2fac5a",
-    "seed": "zkgamevault_identity_v8",
+    "address": "0x26d3bc1cc03026e4a1992fe852d1ac2b969aa0cf21bb949f3921713e854489",
+    "seed": "zkgamevault_identity_v10",
     "name": "Dojo starter",
     "entrypoints": [
       "uuid",
@@ -1479,7 +1479,7 @@
   },
   "contracts": [
     {
-      "address": "0x55ae75967d676c4646cdfcc205a0bb1e8d3475acaf95f42b58ebc65833e6394",
+      "address": "0x7bf5560b543fa9c9c12d0a493ad3e727dac3dc739198a2afa583cf475f61519",
       "class_hash": "0x4a54ed5744ddf80a50b2a7ee9e5f0992eb75c40040897ba06011b0d4b2559af",
       "abi": [
         {
@@ -1709,8 +1709,8 @@
       ]
     },
     {
-      "address": "0x7b1cee5034a4b6d4d0302534f38555e8fe729b61b197623401c4e857c2a52e",
-      "class_hash": "0x65b09c5f37301bef1e0f5fae98a4aba517d9e53fd04deeb685d8ba0e7f68f1",
+      "address": "0x729034e9ef755f41f579c8675ff428365dc5a38379e5a9840618239855d7b53",
+      "class_hash": "0x3e34c58343633635159b6845459b11ae58428313ae06ba3233d074ad77ab143",
       "abi": [
         {
           "type": "impl",
@@ -1794,6 +1794,10 @@
               "type": "core::felt252"
             },
             {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
               "name": "age_commitment",
               "type": "core::felt252"
             },
@@ -1822,6 +1826,10 @@
                 {
                   "name": "user_id",
                   "type": "core::felt252"
+                },
+                {
+                  "name": "name",
+                  "type": "core::byte_array::ByteArray"
                 },
                 {
                   "name": "age_commitment",
@@ -2006,8 +2014,8 @@
       ]
     },
     {
-      "address": "0x11cc51177c2d88ed4cb12a808d1303115f3ab11f833d710a67583111d1160b4",
-      "class_hash": "0x4ac2bacf518543ef55dc86b494562e4bf0ee203eb5412c03bacef437046658d",
+      "address": "0x7399c9959da6b90b7f508f62cb395bb07cb74b591469a1ac5acd4e55b3d1803",
+      "class_hash": "0x3e1a2a274afc1edcd1d459679290e2ee7936fa88f0518a5e338edfd3e8c60ce",
       "abi": [
         {
           "type": "impl",
@@ -2329,8 +2337,8 @@
       ]
     },
     {
-      "address": "0x5b6bec8f8db51640a3a61870d7dcd8c19d478a97b0161412d1df7ccf88f4f8f",
-      "class_hash": "0x410f307c9a21301a24bf29144784386acfafa3e8c548c62165b960523c35ae0",
+      "address": "0x75125fb65f70fad0294d7b0f7431374668ac9959d7dab76a00b5d4e2e6bd5d8",
+      "class_hash": "0x5aacd21b47c2559e5f1b8c2e155810a24ac891937b7479d42439bbf38dfb8ff",
       "abi": [
         {
           "type": "impl",
@@ -2553,6 +2561,22 @@
             },
             {
               "type": "function",
+              "name": "cancel_game",
+              "inputs": [
+                {
+                  "name": "game_id",
+                  "type": "core::felt252"
+                }
+              ],
+              "outputs": [
+                {
+                  "type": "core::bool"
+                }
+              ],
+              "state_mutability": "external"
+            },
+            {
+              "type": "function",
               "name": "get_game",
               "inputs": [
                 {
@@ -2703,6 +2727,7 @@
         "create_game",
         "join_game",
         "make_move",
+        "cancel_game",
         "set_verifier",
         "upgrade"
       ]
@@ -2730,7 +2755,7 @@
     },
     {
       "members": [],
-      "class_hash": "0x78d14a35e88b1a030fe03392cde1d1bc1fde66c70ccc0a6356011778422d80",
+      "class_hash": "0x1dc70c3b39f5fb8c9ba32ed3740ecaa2c031f5bebd5b188413ccf0a90a9e012",
       "tag": "dojo_starter-Identity",
       "selector": "0x2fb54ada557058ca7037f918aa08c2c0364b00a0b32ffed544df4ee7aceef08"
     },
@@ -2783,6 +2808,12 @@
       "class_hash": "0x76b7a575fb12206dd83e0a776a4ae97117cf58549517a7f61220be298abdec5",
       "tag": "dojo_starter-FactRegistered",
       "selector": "0x3e10c5d31d6718d79250347b252501b8af1b017dd78ac43f4d41654f20f0e70"
+    },
+    {
+      "members": [],
+      "class_hash": "0x47c2667ece3a6aa1b7477a45388c6a9d30decea3cfe2199e6bd4487de8d85c6",
+      "tag": "dojo_starter-GameCancelled",
+      "selector": "0x56f6d0010c2f50b5b0dc16779f8fed2e8338d54bbdddae69670b9fc694a3a2f"
     },
     {
       "members": [],

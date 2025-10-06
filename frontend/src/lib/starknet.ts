@@ -1,7 +1,6 @@
 import { RpcProvider, Account, ProviderInterface } from 'starknet';
 
 export function getPublicProvider(): ProviderInterface {
-  // Sepolia public RPC as a sensible default for demos
   return new RpcProvider({ nodeUrl: 'https://starknet-sepolia.public.blastapi.io' });
 }
 

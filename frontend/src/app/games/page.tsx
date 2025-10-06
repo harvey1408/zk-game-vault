@@ -1,6 +1,5 @@
 "use client";
 
-import { ParticleBackground } from "@/components/ParticleBackground";
 import { WalletConnect } from "@/components/WalletConnect";
 import ScrollReveal from "@/components/ScrollReveal";
 import Link from "next/link";
@@ -32,50 +31,49 @@ export default function GamesPage() {
     }).catch(() => {});
   }, []);
   return (
-    <div className="min-h-screen bg-black relative circuit-pattern">
-      <ParticleBackground />
-      <div className="fixed inset-0 circuit-bg pointer-events-none z-0" />
+    <div className="min-h-screen bg-black relative">
+      <div className="bg-gradient-radial fixed inset-0 pointer-events-none" />
 
       <div className="relative z-10">
-        <header className="holographic-border border-b backdrop-void">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-5 flex justify-between items-center flex-wrap gap-4">
-            <Link href="/" className="text-2xl md:text-3xl font-black text-header gradient-text-holographic tracking-tight">
+        <header className="header">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <Link href="/" className="text-2xl font-bold text-display text-gradient">
               ZKGameVault
             </Link>
             <WalletConnect />
           </div>
         </header>
 
-        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="max-w-6xl mx-auto">
             <ScrollReveal>
-              <h1 className="text-4xl md:text-6xl font-black text-header mb-4 gradient-text-holographic leading-tight text-center">
-                Play Games
-              </h1>
-            </ScrollReveal>
-            <ScrollReveal delayMs={100}>
-              <p className="text-[var(--text-secondary)] text-lg md:text-xl text-body mb-10 text-center">
-                Join privacy-gated games with your portable Dojo profile.
-              </p>
+              <div className="text-center mb-12">
+                <h1 className="text-3xl md:text-5xl font-bold text-display mb-3">
+                  Play Games
+                </h1>
+                <p className="text-[var(--text-secondary)] text-base md:text-lg">
+                  Join privacy-gated games with your portable Dojo profile.
+                </p>
+              </div>
             </ScrollReveal>
 
             {/* Create Game Section */}
             <ScrollReveal>
-              <div className="holographic-card rounded-2xl p-8 mb-8 encryption-overlay">
-                <h2 className="text-3xl font-bold text-header mb-2 gradient-text-holographic">Create New Game</h2>
-                <p className="text-[var(--text-secondary)] mb-6">
+              <div className="card-elevated p-6 md:p-8 mb-6">
+                <h2 className="text-2xl font-bold text-display mb-2">Create New Game</h2>
+                <p className="text-[var(--text-secondary)] text-sm mb-6">
                   Start a privacy-gated Tic-Tac-Toe game with age verification
                 </p>
 
-                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div className="mb-6">
                   <label className="block">
-                    <span className="text-sm text-[var(--text-secondary)]">Minimum Age Requirement</span>
+                    <span className="text-sm text-[var(--text-tertiary)] uppercase tracking-wide mb-2 block">Minimum Age Requirement</span>
                     <input
                       type="number"
                       min={0}
                       value={minAge}
                       onChange={(e) => setMinAge(Number(e.target.value || 0))}
-                      className="mt-2 w-full rounded-xl px-4 py-3 backdrop-void holographic-border outline-none text-body"
+                      className="input"
                       placeholder="e.g., 18"
                     />
                   </label>
@@ -83,14 +81,9 @@ export default function GamesPage() {
 
                 <div className="flex items-center gap-4 flex-wrap">
                   <button
-                    className="group relative px-8 md:px-12 py-4 md:py-5 bg-[var(--cyber-blue)] hover:bg-[var(--cyber-blue)]/90 text-black font-bold rounded-xl transition-all duration-300 text-header text-base md:text-lg overflow-hidden interactive-glow disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="btn btn-primary"
                     disabled={!isConnected}
                     onClick={async (e) => {
-                      const container = (e.currentTarget.closest('.encryption-overlay') as HTMLElement) || undefined;
-                      if (container) {
-                        container.classList.add('active');
-                        setTimeout(() => container.classList.remove('active'), 2100);
-                      }
                       setCreateStatus("Creating game...");
                       try {
                         if (!account) {
@@ -146,7 +139,6 @@ export default function GamesPage() {
                                 ? identityRes[2]
                                 : (identityRes as any)?.result?.[2]);
 
-                          // Call prover service with private inputs
                           const proof = await generateSignedProof({
                             age: localProof.age,
                             salt: localProof.salt,
@@ -199,12 +191,11 @@ export default function GamesPage() {
                       }
                     }}
                   >
-                    <span className="relative z-10">Create Game</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-[var(--cyber-blue)] via-[var(--neon-cyan)] to-[var(--cyber-purple)] opacity-0 group-hover:opacity-100 animate-gradient-shift" />
+                    Create Game
                   </button>
 
                   {createStatus && (
-                    <div className="px-4 py-2 text-sm text-[var(--text-secondary)] w-full">
+                    <div className="px-4 py-3 text-sm text-[var(--text-secondary)] w-full bg-[var(--bg-tertiary)] rounded-lg border border-[var(--border-secondary)]">
                       {createStatus}
                     </div>
                   )}
@@ -214,19 +205,19 @@ export default function GamesPage() {
 
             {/* Join Game Section */}
             <ScrollReveal delayMs={100}>
-              <div className="holographic-card rounded-2xl p-8 mb-8 encryption-overlay">
-                <h2 className="text-3xl font-bold text-header mb-2 gradient-text-holographic">Join Existing Game</h2>
-                <p className="text-[var(--text-secondary)] mb-6">
+              <div className="card-elevated p-6 md:p-8 mb-8">
+                <h2 className="text-2xl font-bold text-display mb-2">Join Existing Game</h2>
+                <p className="text-[var(--text-secondary)] text-sm mb-6">
                   Join a game and prove your age with zero-knowledge proof
                 </p>
 
-                <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div className="mb-6">
                   <label className="block">
-                    <span className="text-sm text-[var(--text-secondary)]">Game ID</span>
+                    <span className="text-sm text-[var(--text-tertiary)] uppercase tracking-wide mb-2 block">Game ID</span>
                     <input
                       value={gameIdToJoin}
                       onChange={(e) => setGameIdToJoin(e.target.value)}
-                      className="mt-2 w-full rounded-xl px-4 py-3 backdrop-void holographic-border outline-none text-body"
+                      className="input"
                       placeholder="Enter game ID to join"
                     />
                   </label>
@@ -234,14 +225,9 @@ export default function GamesPage() {
 
                 <div className="flex items-center gap-4 flex-wrap">
                   <button
-                    className="group relative px-8 md:px-12 py-4 md:py-5 bg-[var(--cyber-purple)] hover:bg-[var(--cyber-purple)]/90 text-white font-bold rounded-xl transition-all duration-300 text-header text-base md:text-lg overflow-hidden interactive-glow disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="btn btn-primary"
                     disabled={!isConnected || !gameIdToJoin}
                     onClick={async (e) => {
-                      const container = (e.currentTarget.closest('.encryption-overlay') as HTMLElement) || undefined;
-                      if (container) {
-                        container.classList.add('active');
-                        setTimeout(() => container.classList.remove('active'), 2100);
-                      }
                       setJoinStatus("Preparing to join...");
                       try {
                         if (!account) {
@@ -360,19 +346,15 @@ export default function GamesPage() {
                       }
                     }}
                   >
-                    <span className="relative z-10">Join Game</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-[var(--cyber-purple)] via-[var(--neon-cyan)] to-[var(--cyber-blue)] opacity-0 group-hover:opacity-100 animate-gradient-shift" />
+                    Join Game
                   </button>
 
-                  <Link
-                    href="/identity"
-                    className="px-8 md:px-12 py-4 md:py-5 backdrop-void holographic-border hover:glow-purple text-white font-bold rounded-xl transition-all duration-300 text-header text-base md:text-lg interactive-glow"
-                  >
+                  <Link href="/identity" className="btn btn-secondary">
                     Create Identity
                   </Link>
 
                   {joinStatus && (
-                    <div className="px-4 py-2 text-sm text-[var(--text-secondary)] w-full">
+                    <div className="px-4 py-3 text-sm text-[var(--text-secondary)] w-full bg-[var(--bg-tertiary)] rounded-lg border border-[var(--border-secondary)]">
                       {joinStatus}
                     </div>
                   )}
@@ -380,23 +362,23 @@ export default function GamesPage() {
               </div>
             </ScrollReveal>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <ScrollReveal>
-                <div className="holographic-card rounded-2xl p-6 interactive-glow">
-                  <div className="flex items-start justify-between gap-4">
+                <div className="card p-6">
+                  <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
-                      <h3 className="text-2xl font-bold text-header mb-2">Tic-Tac-Toe</h3>
+                      <h3 className="text-xl font-bold text-display mb-2">Tic-Tac-Toe</h3>
                       <p className="text-[var(--text-secondary)] text-sm">
                         On-chain, privacy-gated entry with ZK proofs.
                       </p>
                     </div>
                     <div className="text-3xl" aria-hidden="true">🎯</div>
                   </div>
-                  <div className="flex items-center gap-3 mt-6 flex-wrap">
-                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[var(--void-black-2)]/70 holographic-border text-[var(--text-primary)]">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="badge badge-primary">
                       Requires Identity
                     </span>
-                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[var(--void-black-2)]/70 cyber-border-cyan text-[var(--text-primary)]">
+                    <span className="badge badge-success">
                       Live
                     </span>
                   </div>
@@ -404,18 +386,18 @@ export default function GamesPage() {
               </ScrollReveal>
 
               <ScrollReveal delayMs={100}>
-                <div className="holographic-card rounded-2xl p-6 interactive-glow">
-                  <div className="flex items-start justify-between gap-4">
+                <div className="card p-6">
+                  <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
-                      <h3 className="text-2xl font-bold text-header mb-2">Dojo Arena (Soon)</h3>
+                      <h3 className="text-xl font-bold text-display mb-2">Dojo Arena</h3>
                       <p className="text-[var(--text-secondary)] text-sm">
                         Multiplayer arena built on Dojo engine.
                       </p>
                     </div>
                     <div className="text-3xl" aria-hidden="true">🛡️</div>
                   </div>
-                  <div className="flex items-center gap-3 mt-6 flex-wrap">
-                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[var(--void-black-2)]/70 cyber-border-purple text-[var(--text-primary)]">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="badge badge-warning">
                       Coming Soon
                     </span>
                   </div>
@@ -423,18 +405,18 @@ export default function GamesPage() {
               </ScrollReveal>
 
               <ScrollReveal delayMs={200}>
-                <div className="holographic-card rounded-2xl p-6 interactive-glow">
-                  <div className="flex items-start justify-between gap-4">
+                <div className="card p-6">
+                  <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
-                      <h3 className="text-2xl font-bold text-header mb-2">Private Leaderboard</h3>
+                      <h3 className="text-xl font-bold text-display mb-2">Private Leaderboard</h3>
                       <p className="text-[var(--text-secondary)] text-sm">
                         ZK-verified scores without exposing players.
                       </p>
                     </div>
                     <div className="text-3xl" aria-hidden="true">🏆</div>
                   </div>
-                  <div className="flex items-center gap-3 mt-6 flex-wrap">
-                    <span className="px-3 py-1 text-xs font-semibold rounded-full bg-[var(--void-black-2)]/70 holographic-border text-[var(--text-primary)]">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="badge badge-primary">
                       Prototype
                     </span>
                   </div>
@@ -442,14 +424,11 @@ export default function GamesPage() {
               </ScrollReveal>
             </div>
 
-            <div className="max-w-3xl mx-auto mt-12 text-center text-sm text-[var(--text-secondary)]">
-              {chainId && (
-                <div>Connected to: {chainId} {typeof blockNumber === 'number' ? `(block #${blockNumber})` : ''}</div>
-              )}
-              {joinStatus && (
-                <div className="mt-2">{joinStatus}</div>
-              )}
-            </div>
+            {chainId && (
+              <div className="mt-12 text-center text-sm text-[var(--text-tertiary)]">
+                Connected to: {chainId} {typeof blockNumber === 'number' ? `(block #${blockNumber})` : ''}
+              </div>
+            )}
           </div>
         </main>
       </div>

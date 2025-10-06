@@ -79,6 +79,7 @@ sozo auth grant writer dojo_starter-GameMove,dojo_starter-tictactoe --world $WOR
 sozo auth grant writer dojo_starter-GameCreated,dojo_starter-tictactoe --world $WORLD_ADDRESS --wait
 sozo auth grant writer dojo_starter-GameJoined,dojo_starter-tictactoe --world $WORLD_ADDRESS --wait
 sozo auth grant writer dojo_starter-MoveMade,dojo_starter-tictactoe --world $WORLD_ADDRESS --wait
+sozo auth grant writer dojo_starter-GameCancelled,dojo_starter-tictactoe --world $WORLD_ADDRESS --wait
 
 # Grant writer permissions for actions system (Position, Moves)
 echo "Granting permissions to actions..."

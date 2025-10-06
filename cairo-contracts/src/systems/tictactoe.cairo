@@ -5,6 +5,7 @@ pub trait ITicTacToe<T> {
     fn create_game(ref self: T, game_id: felt252, min_age_requirement: u8, user_id: felt252) -> felt252;
     fn join_game(ref self: T, game_id: felt252, user_id: felt252) -> bool;
     fn make_move(ref self: T, game_id: felt252, position: u8, user_id: felt252) -> bool;
+    fn cancel_game(ref self: T, game_id: felt252) -> bool;
     fn get_game(self: @T, game_id: felt252) -> TicTacToeGame;
     fn set_verifier(ref self: T, verifier_address: starknet::ContractAddress);
 }
@@ -46,7 +47,14 @@ pub mod tictactoe {
         pub position: u8,
     }
 
-    // Component for storing verifier address
+    #[derive(Copy, Drop, Serde)]
+    #[dojo::event]
+    pub struct GameCancelled {
+        #[key]
+        pub game_id: felt252,
+        pub cancelled_by: felt252,
+    }
+
     #[storage]
     struct Storage {
         verifier_address: ContractAddress,
@@ -79,7 +87,7 @@ pub mod tictactoe {
             let game = TicTacToeGame {
                 game_id,
                 player_x: caller,
-                player_o: zero_address, // Will be set when someone joins
+                player_o: zero_address,
                 current_player: caller,
                 board1: 0, board2: 0, board3: 0,
                 board4: 0, board5: 0, board6: 0,
@@ -270,6 +278,35 @@ pub mod tictactoe {
                 game_id,
                 player: caller.into(),
                 position,
+            });
+
+            true
+        }
+
+        fn cancel_game(ref self: ContractState, game_id: felt252) -> bool {
+            let mut world = self.world_default();
+            let caller = get_caller_address();
+            let zero_address = contract_address_const::<0>();
+
+            let mut game: TicTacToeGame = world.read_model(game_id);
+
+            // Only allow cancellation if:
+            // 1. Game is NOT finished
+            // 2. Game is still in waiting state
+            if game.is_finished || game.player_o != zero_address {
+                return false;
+            }
+
+            // Only allow game creator to cancel (no player O joined)
+            if caller != game.player_x {
+                return false;
+            }
+
+            game.is_finished = true;
+            world.write_model(@game);
+            world.emit_event(@GameCancelled {
+                game_id,
+                cancelled_by: caller.into(),
             });
 
             true

@@ -16,8 +16,8 @@ export interface StarkProofInputs {
 }
 
 export interface StarkProof {
-  proof_hash: string;        // Hash of the proof (for on-chain storage)
-  verification_output: string; // Output from prover (1 = valid, 0 = invalid)
+  proof_hash: string;
+  verification_output: string;
   public_inputs: {
     minimum_age: number;
     age_commitment: string;
@@ -65,7 +65,6 @@ export async function generateStarkProof(
     inputs.private.salt
   );
 
-  // Normalize both to BigInt for comparison (handle hex string or BigInt input)
   const computedBigInt = BigInt(computedCommitment);
   const expectedBigInt = typeof inputs.public.age_commitment === 'string'
     ? BigInt(inputs.public.age_commitment)
@@ -105,7 +104,7 @@ export async function generateStarkProof(
   // STEP 4: Return proof structure
   return {
     proof_hash: proofHash,
-    verification_output: '1', // 1 = valid (we verified locally)
+    verification_output: '1',
     public_inputs: inputs.public,
   };
 }
@@ -130,7 +129,6 @@ export async function generateStarkProofWithService(
   proverEndpoint: string = 'http://localhost:8080/prove'
 ): Promise<StarkProof> {
   try {
-    // Call the prover service
     const response = await fetch(proverEndpoint, {
       method: 'POST',
       headers: {
@@ -158,7 +156,6 @@ export async function generateStarkProofWithService(
     };
   } catch (error) {
     console.error('Failed to generate STARK proof:', error);
-    // Fallback to local verification for development
     return generateStarkProof(inputs);
   }
 }

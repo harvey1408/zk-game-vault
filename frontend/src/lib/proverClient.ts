@@ -7,10 +7,10 @@
 
 export interface ProverRequest {
   age: number;
-  salt: string;
+  salt: string | bigint;
   minimum_age: number;
-  age_commitment: string;
-  user_id: string;
+  age_commitment: string | bigint;
+  user_id: string | bigint;
 }
 
 export interface ProverResponse {
@@ -76,12 +76,12 @@ export function formatSignedProofForContract(
   proof: ProverResponse
 ): any[] {
   return [
-    userIdStr,                    // user_id
-    minAge,                       // minimum_age
-    ageCommitment,               // age_commitment
-    proof.proof_hash,            // proof_hash
-    proof.is_valid,              // verification_output
-    proof.signature.r,           // sig_r
-    proof.signature.s,           // sig_s
+    userIdStr,
+    minAge,
+    ageCommitment,
+    proof.proof_hash,
+    proof.is_valid,
+    proof.signature.r,
+    proof.signature.s,
   ];
 }
