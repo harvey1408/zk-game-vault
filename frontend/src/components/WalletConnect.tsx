@@ -9,8 +9,10 @@ export function WalletConnect() {
   const { connect, connectors, isPending } = useConnect();
   const { connectors: injected } = useInjectedConnectors({ recommended: [] });
   const { disconnect } = useDisconnect();
-  const { setLastConnectedConnector } = useWalletContext();
+  const { lastConnectedConnector, setLastConnectedConnector } = useWalletContext();
   const [mounted, setMounted] = useState(false);
+  const [hasAttemptedAutoConnect, setHasAttemptedAutoConnect] = useState(false);
+
   const shortAddress = useMemo(() => {
     if (!address) return '';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -32,9 +34,20 @@ export function WalletConnect() {
     disconnect();
   };
 
+  // Auto-connect on mount if previously connected
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    // Only auto-connect once, and only if not already connected
+    if (!hasAttemptedAutoConnect && !isConnected && lastConnectedConnector && available.length > 0) {
+      const connector = available.find(c => c.id === lastConnectedConnector);
+      if (connector) {
+        setHasAttemptedAutoConnect(true);
+        // Silent auto-connect - wallet won't popup unless user interaction needed
+        connect({ connector });
+      }
+    }
+  }, [hasAttemptedAutoConnect, isConnected, lastConnectedConnector, available, connect]);
 
   if (!mounted) {
     return (

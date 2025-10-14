@@ -89,7 +89,7 @@ export default function IdentityPage() {
                   </div>
 
                   <div className="flex items-center gap-4 mt-8 flex-wrap">
-                    <button className="btn btn-primary"
+                    <button className="btn btn-primary group relative overflow-hidden"
                       disabled={!isConnected || hasIdentity}
                       onClick={async () => {
                         setTxStatus("Generating ZK proof...");
@@ -143,7 +143,7 @@ export default function IdentityPage() {
                       <span className="relative z-10">
                         {hasIdentity ? "Identity Already Created" : "Create ZK Identity"}
                       </span>
-                      <div className="absolute inset-0 bg-gradient-to-r from-[var(--cyber-blue)] via-[var(--neon-cyan)] to-[var(--cyber-purple)] opacity-0 group-hover:opacity-100 animate-gradient-shift" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-[var(--cyber-blue)] via-[var(--neon-cyan)] to-[var(--cyber-purple)] opacity-0 group-hover:opacity-100 animate-gradient-shift pointer-events-none" />
                     </button>
 
                     {hasIdentity && (
