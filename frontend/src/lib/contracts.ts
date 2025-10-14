@@ -1,4 +1,4 @@
-import { Account, Contract, ProviderInterface } from 'starknet';
+import { Account, Contract, ProviderInterface, Abi } from 'starknet';
 // Import deployed Dojo manifest (dev)
 // Using a direct import to avoid .env usage per project rules
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -7,12 +7,16 @@ import manifest from '../../../cairo-contracts/manifest_dev.json';
 
 type DeployedContract = {
   address: string;
-  abi: any[];
+  abi: Abi;
   tag?: string;
 };
 
+type ManifestType = {
+  contracts?: DeployedContract[];
+};
+
 function findByTag(tag: string): DeployedContract | null {
-  const list = (manifest as any)?.contracts as DeployedContract[] | undefined;
+  const list = (manifest as ManifestType)?.contracts;
   if (!Array.isArray(list)) return null;
   const item = list.find((c) => c.tag === tag);
   return item ?? null;
@@ -23,11 +27,11 @@ const starkVerifierEntry = findByTag('dojo_starter-stark_age_verifier');
 const tictactoeEntry = findByTag('dojo_starter-tictactoe');
 
 export const IDENTITY_CONTRACT_ADDRESS = identityEntry?.address ?? '';
-export const IDENTITY_CONTRACT_ABI: any = identityEntry?.abi ?? [];
+export const IDENTITY_CONTRACT_ABI: Abi = identityEntry?.abi ?? [];
 export const STARK_VERIFIER_CONTRACT_ADDRESS = starkVerifierEntry?.address ?? '';
-export const STARK_VERIFIER_CONTRACT_ABI: any = starkVerifierEntry?.abi ?? [];
+export const STARK_VERIFIER_CONTRACT_ABI: Abi = starkVerifierEntry?.abi ?? [];
 export const TICTACTOE_CONTRACT_ADDRESS = tictactoeEntry?.address ?? '';
-export const TICTACTOE_CONTRACT_ABI: any = tictactoeEntry?.abi ?? [];
+export const TICTACTOE_CONTRACT_ABI: Abi = tictactoeEntry?.abi ?? [];
 
 export function getIdentityContract(client: Account | ProviderInterface) {
   if (!IDENTITY_CONTRACT_ADDRESS || !Array.isArray(IDENTITY_CONTRACT_ABI)) return null;

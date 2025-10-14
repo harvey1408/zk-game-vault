@@ -1,6 +1,5 @@
 "use client";
 
-import { ParticleBackground } from "@/components/ParticleBackground";
 import { WalletConnect } from "@/components/WalletConnect";
 import ScrollReveal from "@/components/ScrollReveal";
 import Link from "next/link";
@@ -10,9 +9,33 @@ import { useAccount } from "@starknet-react/core";
 import { getTicTacToeContract } from "@/lib/contracts";
 import { getPlayerName } from "@/lib/playerNames";
 
+// Type for game state returned from contract
+interface GameState {
+  board1?: number | bigint;
+  board2?: number | bigint;
+  board3?: number | bigint;
+  board4?: number | bigint;
+  board5?: number | bigint;
+  board6?: number | bigint;
+  board7?: number | bigint;
+  board8?: number | bigint;
+  board9?: number | bigint;
+  current_player?: string | bigint;
+  currentPlayer?: string | bigint;
+  player_x?: string | bigint;
+  playerX?: string | bigint;
+  player_o?: string | bigint;
+  playerO?: string | bigint;
+  winner?: string | bigint;
+  is_finished?: number | bigint | boolean;
+  isFinished?: number | bigint | boolean;
+  is_draw?: number | bigint | boolean;
+  isDraw?: number | bigint | boolean;
+}
+
 export default function TicTacToeGamePage() {
   const params = useParams<{ gameId: string }>();
-  const { isConnected, account } = useAccount() as any;
+  const { account } = useAccount();
   const gameId = useMemo(() => {
     try { return BigInt(params?.gameId || "0"); } catch { return BigInt(0); }
   }, [params]);
@@ -29,10 +52,10 @@ export default function TicTacToeGamePage() {
   const [player1Name, setPlayer1Name] = useState<string>("");
   const [player2Name, setPlayer2Name] = useState<string>("");
   const myAddress = useMemo(() => {
-    try { return String((account as any)?.address || ""); } catch { return ""; }
+    try { return String(account?.address || ""); } catch { return ""; }
   }, [account]);
 
-  const toBigIntSafe = useCallback((value: any): bigint => {
+  const toBigIntSafe = useCallback((value: unknown): bigint => {
     try {
       if (value === null || value === undefined) return BigInt(0);
       const str = String(value).trim();
@@ -43,7 +66,7 @@ export default function TicTacToeGamePage() {
     }
   }, []);
   const myAddrBI = useMemo(() => toBigIntSafe(myAddress), [myAddress, toBigIntSafe]);
-  const toBoolSafe = useCallback((value: any): boolean => {
+  const toBoolSafe = useCallback((value: unknown): boolean => {
     try {
       if (typeof value === 'boolean') return value;
       const n = Number(String(value ?? 0));
@@ -84,17 +107,17 @@ export default function TicTacToeGamePage() {
       if (!account) return;
       const contract = getTicTacToeContract(account);
       if (!contract) return;
-      const game: any = await contract.call("get_game", [gameId]);
-      const b = [game?.board1, game?.board2, game?.board3, game?.board4, game?.board5, game?.board6, game?.board7, game?.board8, game?.board9].map((x: any) => Number(x ?? 0));
+      const game = await contract.call("get_game", [gameId]) as GameState;
+      const b = [game?.board1, game?.board2, game?.board3, game?.board4, game?.board5, game?.board6, game?.board7, game?.board8, game?.board9].map((x: number | bigint | undefined) => Number(x ?? 0));
       setBoard(b);
 
       // Use player_x and player_o (wallet addresses)
-      const currentPlayerAddr = String((game as any)?.current_player ?? (game as any)?.currentPlayer ?? "");
-      const playerXAddr = String((game as any)?.player_x ?? (game as any)?.playerX ?? "");
-      const playerOAddr = String((game as any)?.player_o ?? (game as any)?.playerO ?? "");
-      const winnerAddr = String((game as any)?.winner ?? "0");
-      const finishedFlag = (game as any)?.is_finished ?? (game as any)?.isFinished ?? 0;
-      const drawFlag = (game as any)?.is_draw ?? (game as any)?.isDraw ?? 0;
+      const currentPlayerAddr = String(game?.current_player ?? game?.currentPlayer ?? "");
+      const playerXAddr = String(game?.player_x ?? game?.playerX ?? "");
+      const playerOAddr = String(game?.player_o ?? game?.playerO ?? "");
+      const winnerAddr = String(game?.winner ?? "0");
+      const finishedFlag = game?.is_finished ?? game?.isFinished ?? 0;
+      const drawFlag = game?.is_draw ?? game?.isDraw ?? 0;
 
       setCurrent(currentPlayerAddr);
       setPlayer1(playerXAddr);
@@ -108,8 +131,6 @@ export default function TicTacToeGamePage() {
       await fetchPlayerNames(playerXAddr, playerOAddr);
 
       // Determine game state - check if player_o is set
-      const zeroAddr = BigInt(0);
-      const winnerBI = toBigIntSafe(winnerAddr);
       const playerOBI = toBigIntSafe(playerOAddr);
       if (finished) {
         setGameState("finished");
@@ -119,7 +140,7 @@ export default function TicTacToeGamePage() {
         setGameState("waiting");
       }
     } catch {}
-  }, [account, gameId, fetchPlayerNames]);
+  }, [account, gameId, fetchPlayerNames, toBigIntSafe, toBoolSafe]);
 
   useEffect(() => {
     loadGameState();
@@ -146,7 +167,7 @@ export default function TicTacToeGamePage() {
         return;
       }
 
-      const myAddr = toBigIntSafe((account as any)?.address);
+      const myAddr = toBigIntSafe(account?.address);
       if (toBigIntSafe(current) !== myAddr) {
         setStatus("❌ Not your turn!");
         return;
@@ -157,15 +178,17 @@ export default function TicTacToeGamePage() {
         return;
       }
 
-      const tx: any = await contract.invoke("make_move", [gameId, pos + 1, myUserId]);
+      const tx = await contract.invoke("make_move", [gameId, pos + 1, myUserId]);
       setStatus("⏳ Waiting for confirmation...");
+      // @ts-expect-error - waitForTransaction types may vary
       await account.waitForTransaction(tx?.transaction_hash ?? tx?.hash);
       setStatus("✅ Move submitted!");
 
       // Reload game state
       setTimeout(loadGameState, 1000);
-    } catch (e: any) {
-      setStatus(`❌ ${e?.message || "Failed to make move"}`);
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : "Failed to make move";
+      setStatus(`❌ ${errorMessage}`);
     }
   };
 
@@ -183,21 +206,23 @@ export default function TicTacToeGamePage() {
       }
 
       // Only game creator can cancel
-      const myAddr = toBigIntSafe((account as any)?.address);
+      const myAddr = toBigIntSafe(account?.address);
       const player1Addr = toBigIntSafe(player1);
       if (myAddr !== player1Addr) {
         setStatus("❌ Only game creator can cancel.");
         return;
       }
 
-      const tx: any = await contract.invoke("cancel_game", [gameId]);
+      const tx = await contract.invoke("cancel_game", [gameId]);
       setStatus("⏳ Cancelling game...");
+      // @ts-expect-error - waitForTransaction types may vary
       await account.waitForTransaction(tx?.transaction_hash ?? tx?.hash);
       setStatus("✅ Game cancelled!");
 
       setTimeout(loadGameState, 1000);
-    } catch (e: any) {
-      setStatus(`❌ ${e?.message || "Failed to cancel game"}`);
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : "Failed to cancel game";
+      setStatus(`❌ ${errorMessage}`);
     }
   };
 

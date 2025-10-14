@@ -74,7 +74,7 @@ export function formatSignedProofForContract(
   minAge: number,
   ageCommitment: string,
   proof: ProverResponse
-): any[] {
+): [string, number, string, string, number, string, string] {
   return [
     userIdStr,
     minAge,

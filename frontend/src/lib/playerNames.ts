@@ -1,7 +1,7 @@
-import { Account } from 'starknet';
+import { AccountInterface } from 'starknet';
 
 export async function getPlayerName(
-  account: Account,
+  account: AccountInterface,
   walletAddress: string
 ): Promise<string> {
   try {
@@ -42,7 +42,7 @@ export function getUserName(userId: string): string {
   try {
     const names = JSON.parse(localStorage.getItem('user_names') || '{}');
     return names[userId] || `Player ${userId.slice(-4)}`;
-  } catch (error) {
+  } catch {
     return `Player ${userId.slice(-4)}`;
   }
 }

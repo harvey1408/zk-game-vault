@@ -10,23 +10,35 @@ import { getTicTacToeContract, getIdentityContract, getStarkVerifierContract } f
 import { retrieveAgeProof } from "@/lib/zkProofs";
 import { generateSignedProof, formatSignedProofForContract } from "@/lib/proverClient";
 
+interface IdentityResult {
+  age_commitment?: string | bigint;
+  result?: unknown[];
+  [key: string]: unknown;
+}
+
+interface GameData {
+  min_age_requirement?: number | bigint;
+  minAgeRequirement?: number | bigint;
+  [key: string]: unknown;
+}
+
 export default function GamesPage() {
   const [chainId, setChainId] = useState<string>("");
   const [blockNumber, setBlockNumber] = useState<number | null>(null);
-  const { isConnected, account } = useAccount() as any;
+  const { isConnected, account } = useAccount();
   const [joinStatus, setJoinStatus] = useState<string>("");
   const [createStatus, setCreateStatus] = useState<string>("");
   const [minAge, setMinAge] = useState<number>(18);
-  const [showCreateGame, setShowCreateGame] = useState<boolean>(false);
   const [gameIdToJoin, setGameIdToJoin] = useState<string>("");
 
   useEffect(() => {
     const provider = getPublicProvider();
-    provider.getChainId().then((id: any) => {
+    provider.getChainId().then((id: unknown) => {
       setChainId(typeof id === 'string' ? id : JSON.stringify(id));
     }).catch(() => {});
-    provider.getBlock('latest').then((block: any) => {
-      const bn = block?.block_number ?? block?.blockNumber;
+    provider.getBlock('latest').then((block: unknown) => {
+      const blockObj = block as { block_number?: number; blockNumber?: number };
+      const bn = blockObj?.block_number ?? blockObj?.blockNumber;
       if (typeof bn === 'number') setBlockNumber(bn);
     }).catch(() => {});
   }, []);
@@ -83,7 +95,7 @@ export default function GamesPage() {
                   <button
                     className="btn btn-primary"
                     disabled={!isConnected}
-                    onClick={async (e) => {
+                    onClick={async () => {
                       setCreateStatus("Creating game...");
                       try {
                         if (!account) {
@@ -132,12 +144,12 @@ export default function GamesPage() {
                         if (!hasValidForMin) {
                           setCreateStatus("🔐 Generating ZK-STARK proof for selected age requirement...");
 
-                          const identityRes: any = await identityContract.call("get_identity", [userIdStr]);
+                          const identityRes = await identityContract.call("get_identity", [userIdStr]) as IdentityResult;
                           const ageCommitment = (identityRes && typeof identityRes === 'object' && 'age_commitment' in identityRes)
-                            ? (identityRes as any).age_commitment
+                            ? identityRes.age_commitment
                             : (Array.isArray(identityRes)
                                 ? identityRes[2]
-                                : (identityRes as any)?.result?.[2]);
+                                : identityRes?.result?.[2]);
 
                           const proof = await generateSignedProof({
                             age: localProof.age,
@@ -159,7 +171,7 @@ export default function GamesPage() {
                           );
                           const regTx = await starkVerifier.invoke("register_proof", calldata);
                           setCreateStatus("⏳ Waiting for proof confirmation...");
-                          // @ts-ignore
+                          // @ts-expect-error - waitForTransaction types may vary
                           await account.waitForTransaction(regTx.transaction_hash || regTx.hash);
                           setCreateStatus("✅ Proof registered. Creating game...");
                         } else {
@@ -176,7 +188,7 @@ export default function GamesPage() {
 
                         setCreateStatus("⏳ Waiting for confirmation...");
 
-                        // @ts-ignore
+                        // @ts-expect-error - waitForTransaction types may vary
                         await account.waitForTransaction(tx.transaction_hash || tx.hash);
 
                         setCreateStatus(`✅ Game created! Game ID: ${gameId}`);
@@ -186,8 +198,9 @@ export default function GamesPage() {
                         setTimeout(() => {
                           window.location.href = `/games/${gameId}`;
                         }, 1500);
-                      } catch (err: any) {
-                        setCreateStatus(`❌ ${err?.message || "Failed to create game"}`);
+                      } catch (err: unknown) {
+                        const errorMessage = err instanceof Error ? err.message : "Failed to create game";
+                        setCreateStatus(`❌ ${errorMessage}`);
                       }
                     }}
                   >
@@ -227,7 +240,7 @@ export default function GamesPage() {
                   <button
                     className="btn btn-primary"
                     disabled={!isConnected || !gameIdToJoin}
-                    onClick={async (e) => {
+                    onClick={async () => {
                       setJoinStatus("Preparing to join...");
                       try {
                         if (!account) {
@@ -267,8 +280,8 @@ export default function GamesPage() {
                         }
 
                         // Fetch game to get dynamic min_age_requirement
-                        const gameData: any = await contract.call("get_game", [gameIdToJoin]);
-                        const minReq = Number((gameData as any)?.min_age_requirement ?? (gameData as any)?.minAgeRequirement ?? 18);
+                        const gameData = await contract.call("get_game", [gameIdToJoin]) as GameData;
+                        const minReq = Number(gameData?.min_age_requirement ?? gameData?.minAgeRequirement ?? 18);
 
                         const hasValidProof = await starkVerifier.call("has_valid_proof", [userIdStr, minReq]);
 
@@ -282,12 +295,12 @@ export default function GamesPage() {
                             return;
                           }
 
-                          const identityRes: any = await identityContract.call("get_identity", [userIdStr]);
+                          const identityRes = await identityContract.call("get_identity", [userIdStr]) as IdentityResult;
                           const ageCommitment = (identityRes && typeof identityRes === 'object' && 'age_commitment' in identityRes)
-                            ? (identityRes as any).age_commitment
+                            ? identityRes.age_commitment
                             : (Array.isArray(identityRes)
                                 ? identityRes[2]
-                                : (identityRes as any)?.result?.[2]);
+                                : identityRes?.result?.[2]);
 
                           setJoinStatus("⚡ Generating cryptographic proof with trusted prover...");
 
@@ -317,7 +330,7 @@ export default function GamesPage() {
 
                           setJoinStatus("⏳ Waiting for proof confirmation...");
 
-                          // @ts-ignore
+                          // @ts-expect-error - waitForTransaction types may vary
                           await account.waitForTransaction(proofTx.transaction_hash || proofTx.hash);
 
                           setJoinStatus("✅ ZK proof verified! Age remains private.");
@@ -332,7 +345,7 @@ export default function GamesPage() {
 
                         setJoinStatus("⏳ Waiting for confirmation...");
 
-                        // @ts-ignore
+                        // @ts-expect-error - waitForTransaction types may vary
                         await account.waitForTransaction(tx.transaction_hash || tx.hash);
 
                         setJoinStatus("✅ Successfully joined game!");
@@ -341,8 +354,9 @@ export default function GamesPage() {
                         setTimeout(() => {
                           window.location.href = `/games/${gameIdToJoin}`;
                         }, 1500);
-                      } catch (err: any) {
-                        setJoinStatus(`❌ ${err?.message || "Failed to join game"}`);
+                      } catch (err: unknown) {
+                        const errorMessage = err instanceof Error ? err.message : "Failed to join game";
+                        setJoinStatus(`❌ ${errorMessage}`);
                       }
                     }}
                   >

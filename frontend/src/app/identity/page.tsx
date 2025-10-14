@@ -15,7 +15,7 @@ import {
 import { saveWalletToUserMapping, saveUserName } from "@/lib/playerNames";
 
 export default function IdentityPage() {
-  const { isConnected, account } = useAccount() as any;
+  const { isConnected, account } = useAccount();
   const [txStatus, setTxStatus] = useState<string>("");
   const [lastUserId, setLastUserId] = useState<string>("");
   const [displayName, setDisplayName] = useState<string>("");
@@ -91,7 +91,7 @@ export default function IdentityPage() {
                   <div className="flex items-center gap-4 mt-8 flex-wrap">
                     <button className="btn btn-primary"
                       disabled={!isConnected || hasIdentity}
-                      onClick={async (e) => {
+                      onClick={async () => {
                         setTxStatus("Generating ZK proof...");
                         try {
                           const client = account ?? getPublicProvider();
@@ -120,7 +120,7 @@ export default function IdentityPage() {
 
                           setTxStatus("⏳ Waiting for confirmation...");
 
-                          // @ts-ignore
+                          // @ts-expect-error - waitForTransaction types may vary
                           await account.waitForTransaction(tx.transaction_hash || tx.hash);
 
                           setTxStatus("✅ Identity created successfully!");
@@ -134,8 +134,9 @@ export default function IdentityPage() {
                             saveWalletToUserMapping(walletAddress, userId);
                             saveUserName(userId, displayName);
                           } catch {}
-                        } catch (err: any) {
-                          setTxStatus(`❌ ${err?.message || "Failed to submit transaction"}`);
+                        } catch (err: unknown) {
+                          const errorMessage = err instanceof Error ? err.message : "Failed to submit transaction";
+                          setTxStatus(`❌ ${errorMessage}`);
                         }
                       }}
                     >
@@ -203,7 +204,7 @@ export default function IdentityPage() {
             {hasIdentity && (
               <ScrollReveal delayMs={200}>
                 <div className="mt-12 card-elevated p-8">
-                  <h2 className="text-2xl font-bold text-display mb-2">What's Next?</h2>
+                  <h2 className="text-2xl font-bold text-display mb-2">What&apos;s Next?</h2>
                   <p className="text-[var(--text-secondary)] text-sm mb-6">
                     Your identity is ready! Age verification happens automatically when you join a game.
                   </p>

@@ -1,17 +1,13 @@
 'use client';
 
-import { useAccount, useConnect, useDisconnect, useInjectedConnectors } from '@starknet-react/core';
+import { useAccount, useConnect, useDisconnect, useInjectedConnectors, Connector } from '@starknet-react/core';
 import { useEffect, useMemo, useState } from 'react';
 import { useWalletContext } from './WalletProvider';
 
 export function WalletConnect() {
   const { address, isConnected } = useAccount();
   const { connect, connectors, isPending } = useConnect();
-  const { connectors: injected } = useInjectedConnectors({
-    recommended: [],
-    include: ["argentX", "braavos"],
-    exclude: [],
-  } as any);
+  const { connectors: injected } = useInjectedConnectors({ recommended: [] });
   const { disconnect } = useDisconnect();
   const { lastConnectedConnector, setLastConnectedConnector } = useWalletContext();
   const [mounted, setMounted] = useState(false);
@@ -21,7 +17,7 @@ export function WalletConnect() {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }, [address]);
 
-  const handleConnect = (connector: any) => {
+  const handleConnect = (connector: Connector) => {
     setLastConnectedConnector(connector.id);
     connect({ connector });
   };
@@ -85,7 +81,7 @@ export function WalletConnect() {
 
   return (
     <div className="flex gap-3 flex-wrap">
-      {available.map((connector: any) => (
+      {available.map((connector: Connector) => (
         <button
           key={connector.id}
           onClick={() => handleConnect(connector)}

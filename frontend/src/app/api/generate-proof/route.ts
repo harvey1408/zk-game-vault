@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { hash, ec, encode } from 'starknet';
+import { hash, ec } from 'starknet';
 
 /**
  * Prover Service API Route
@@ -109,14 +109,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ProofResp
       },
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Prover error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Prover failed';
     return NextResponse.json({
       success: false,
       is_valid: 0,
       proof_hash: '0x0',
       signature: { r: '0x0', s: '0x0' },
-      error: error.message || 'Prover failed',
+      error: errorMessage,
     }, { status: 500 });
   }
 }
